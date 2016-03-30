@@ -12,6 +12,8 @@ public class Bishop extends Piece
         value = 3;
         x = -1;
         y = -1;
+        name = 'B';
+        color = Color.NONE;
     }
     
     //coordinate and color constructor

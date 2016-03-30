@@ -12,6 +12,8 @@ public class Rook extends Piece
         value = 5;
         x = -1;
         y = -1;
+        name = 'R';
+        color = Color.NONE;
     }
     
     //coordinate and color constructor

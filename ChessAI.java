@@ -8,29 +8,44 @@ public class ChessAI
 {
     Piece[][] board;
     
-    public static Piece[][] emptyBoard()
+    //returns an empty board
+    public Piece[][] emptyBoard()
     {
-        Piece[][] board = new Piece[8][8];
+        Piece[][] newBoard = new Piece[8][8];
         
         for (int x = 0; x < 8; x++)
         {
             for (int y = 0; y < 8; y++)
             {
-                board[x][y] = new Empty();
+                newBoard[x][y] = new Empty();
             }
         }
         
         return board;
     }
     
-    public static void importBoard()
+    //takes a board and converts it to the board
+    public void importBoard()
     {
         
     }
     
-    public static void displayBoard()
+    //print a small version of the board to the console
+    public void displayBoard()
     {
+        for (int y = 0; y < 8; y++)
+        {
+            System.out.print("-----------------\n|"); //17
+            
+            for (int x = 0; x < 8; x++)
+            {
+                System.out.print(board[x][y].name);
+            }
+            
+            System.out.print("\n");
+        }
         
+        System.out.print("-----------------");
     }
 
 }

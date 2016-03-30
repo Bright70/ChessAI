@@ -12,6 +12,8 @@ public class King extends Piece
         value = 3;
         x = -1;
         y = -1;
+        name = 'K';
+        color = Color.NONE;
     }
     
     //coordinate and color constructor

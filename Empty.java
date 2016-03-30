@@ -12,6 +12,8 @@ public class Empty extends Piece
         value = -1;
         x = -1;
         y = -1;
+        name = ' ';
+        color = Color.NONE;
     }
     
     //coordinate constructor

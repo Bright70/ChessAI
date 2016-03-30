@@ -12,6 +12,8 @@ public class Knight extends Piece
         value = 3;
         x = -1;
         y = -1;
+        name = 'N';
+        color = Color.NONE;
     }
     
     //coordinate and color constructor

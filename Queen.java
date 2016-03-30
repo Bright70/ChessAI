@@ -12,6 +12,8 @@ public class Queen extends Piece
         value = 9;
         x = -1;
         y = -1;
+        name = 'Q';
+        color = Color.NONE;
     }
     
     //coordinate and color constructor
