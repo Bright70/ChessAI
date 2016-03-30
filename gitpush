@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "Enter changes made"
+
 read message
 
 cd ~
@@ -7,5 +9,5 @@ cd Developer/NetBeans/ChessAI/src/chessai/
 cp *.java ~/Developer/GitHub/ChessAI/
 cd ~/Developer/GitHub/ChessAI/
 git add -A
-git commit -m $message
+git commit -m "$message"
 git push
