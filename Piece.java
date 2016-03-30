@@ -7,6 +7,7 @@ package chessai;
 public class Piece
 {
     int value, x, y;
+    Color color;
     
     //default constructor
     Piece()
@@ -14,6 +15,7 @@ public class Piece
         value = -1;
         x = -1;
         y = -1;
+        color = Color.NONE;
     }
     
     //piece constructor
@@ -22,6 +24,7 @@ public class Piece
         value = p.value;
         x = p.x;
         y = p.y;
+        color = p.color;
     }
     
     //coordinate constructor

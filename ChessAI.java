@@ -6,6 +6,7 @@ package chessai;
 
 public class ChessAI
 {
+    Piece[][] board;
     
     public static Piece[][] emptyBoard()
     {
@@ -20,6 +21,16 @@ public class ChessAI
         }
         
         return board;
+    }
+    
+    public static void importBoard()
+    {
+        
+    }
+    
+    public static void displayBoard()
+    {
+        
     }
 
 }
