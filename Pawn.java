@@ -15,11 +15,12 @@ public class Pawn extends Piece
         color = Color.NONE;
     }
     
-    //coordinate constructor
+    //coordinate and color constructor
     Pawn(int x, int y, Color color)
     {
         value = 1;
         this.x = x;
         this.y = y;
+        this.color = color;
     }
 }

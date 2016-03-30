@@ -30,7 +30,9 @@ public class Piece
     //coordinate constructor
     Piece(int x, int y)
     {
+        value = -1;
         this.x = x;
         this.y = y;
+        color = Color.NONE;
     }
 }

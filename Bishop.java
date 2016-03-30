@@ -14,11 +14,12 @@ public class Bishop extends Piece
         y = -1;
     }
     
-    //coordinate constructor
-    Bishop(int x, int y)
+    //coordinate and color constructor
+    Bishop(int x, int y, Color color)
     {
         value = 3;
         this.x = x;
         this.y = y;
+        this.color = color;
     }
 }

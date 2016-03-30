@@ -14,11 +14,12 @@ public class Queen extends Piece
         y = -1;
     }
     
-    //coordinate constructor
-    Queen(int x, int y)
+    //coordinate and color constructor
+    Queen(int x, int y, Color color)
     {
         value = 9;
         this.x = x;
         this.y = y;
+        this.color = color;
     }
 }

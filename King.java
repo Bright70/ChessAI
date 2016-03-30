@@ -14,11 +14,12 @@ public class King extends Piece
         y = -1;
     }
     
-    //coordinate constructor
-    King(int x, int y)
+    //coordinate and color constructor
+    King(int x, int y, Color color)
     {
         value = 3;
         this.x = x;
         this.y = y;
+        this.color = color;
     }
 }
