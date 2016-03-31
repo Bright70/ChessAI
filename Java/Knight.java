@@ -22,6 +22,7 @@ public class Knight extends Piece
         value = 3;
         this.x = x;
         this.y = y;
+        name = 'N';
         this.color = color;
     }
 }

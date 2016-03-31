@@ -1,25 +1,26 @@
 /*
-    Bishop.
+    Rook.
  */
 
 package chessai;
 
-public class Bishop extends Piece
+public class Rook extends Piece
 {
     //default constructor
-    Bishop()
+    Rook()
     {
-        value = 3;
+        value = 5;
         x = -1;
         y = -1;
-        name = 'B';
+        name = 'R';
         color = Color.NONE;
     }
     
     //coordinate and color constructor
-    Bishop(int x, int y, Color color)
+    Rook(int x, int y, Color color)
     {
-        value = 3;
+        value = 5;
+        name = 'R';
         this.x = x;
         this.y = y;
         this.color = color;

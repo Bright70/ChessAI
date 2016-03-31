@@ -1,27 +1,28 @@
 /*
-    Rook.
+    Queen.
  */
 
 package chessai;
 
-public class Rook extends Piece
+public class Queen extends Piece
 {
     //default constructor
-    Rook()
+    Queen()
     {
-        value = 5;
+        value = 9;
         x = -1;
         y = -1;
-        name = 'R';
+        name = 'Q';
         color = Color.NONE;
     }
     
     //coordinate and color constructor
-    Rook(int x, int y, Color color)
+    Queen(int x, int y, Color color)
     {
-        value = 5;
+        value = 9;
         this.x = x;
         this.y = y;
+        name = 'Q';
         this.color = color;
     }
 }
