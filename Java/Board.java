@@ -134,7 +134,7 @@ public final class Board {
         //king moving
         if(board[m.sx][m.sy].name == 'K'){
             // magnitude of all directional movement should be no greater than one
-            if(Math.abs(m.ex - m.sx) > 1 && )
+            if(Math.abs(m.ex - m.sx) > 1){}
         }
 
         // piece specific checks end here

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+cd ~/Developer/GitHub/ChessAI/
+git pull
+cp Java/*.java ~/Developer/NetBeans/ChessAI/src/chessai/

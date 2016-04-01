@@ -4,8 +4,7 @@ echo "Enter changes made"
 
 read message
 
-cd ~
-cd Developer/NetBeans/ChessAI/src/chessai/
+cd ~/Developer/NetBeans/ChessAI/src/chessai/
 cp *.java ~/Developer/GitHub/ChessAI/Java/
 cd ~/Developer/GitHub/ChessAI/
 git add -A
