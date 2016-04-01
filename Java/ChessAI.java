@@ -29,23 +29,4 @@ public class ChessAI
     {
         
     }
-    
-    //print a small version of the board to the console
-    public void displayBoard()
-    {
-        for (int y = 0; y < 8; y++)
-        {
-            System.out.print("-----------------\n|"); //17
-            
-            for (int x = 0; x < 8; x++)
-            {
-                System.out.print(board[x][y].name);
-            }
-            
-            System.out.print("\n");
-        }
-        
-        System.out.print("-----------------");
-    }
-
 }

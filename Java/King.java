@@ -1,26 +1,27 @@
 /*
-    Queen.
+    King.
  */
 
 package chessai;
 
-public class Queen extends Piece
+public class King extends Piece
 {
     //default constructor
-    Queen()
+    King()
     {
-        value = 9;
+        value = 3;
         x = -1;
         y = -1;
-        name = 'Q';
+        name = 'K';
         color = Color.NONE;
     }
     
     //coordinate and color constructor
-    Queen(int x, int y, Color color)
+    King(int x, int y, Color color)
     {
-        value = 9;
+        value = 3;
         this.x = x;
+        name = 'K';
         this.y = y;
         this.color = color;
     }
