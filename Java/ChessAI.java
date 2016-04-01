@@ -1,12 +1,12 @@
 /*
-    Actual AI for ChessAI.
+    Chess AI for Andres and Adrian's Computer Science 20 Final Project.
 */
 
 package chessai;
 
 public class ChessAI
 {
-    //evaluate position, return score
+    
     public double evaluate(Board board)
     {
         double score = 0;
@@ -14,12 +14,15 @@ public class ChessAI
         return score;
     }
 
-    //choose a move by evaulating multiple positions
-    public Move aiMakeMove(Board board)
+    public boolean isLegal(Move move, Board board)
     {
-        evaluate(board);
+        //pawn moves
+        if (board.board[move.sx][move.sy].name == 'P')
+        {
+            
+        }
         
-        return new Move();
+        return true;
     }
     
 }

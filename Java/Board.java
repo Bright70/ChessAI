@@ -179,6 +179,30 @@ public final class Board
         return true;
     }
     
+    public boolean checkMate(){
+    	Color color;
+    	if(turnCount % 2 == 0)color = Color.WHITE;
+    	else color = Color.BLACK;
+    	
+    	for(int x = 0; x < 8; x++){
+    		for(int y = 0; y < 8; y++){
+    			if(board[x][y].name == 'K' && board[x][y].color == color){
+    				// will check around 3x3 square surrounding king to see if any legal moves remaining
+    				for(int ex = x-1; x < x+1; ex++){
+		    			for(int ey = y-1; y < y+1; y++){
+		    				if(x > 0 && y > 0){ // prevents arrayOutOfBounds
+		    					Move move = new Move(x, y, ex, ey, board[x][y]);
+			    				if(isLegal(move))
+			    					return false; // if any legal move is found, not checkmate
+		    				}	
+		    			}
+		    		}
+    			}
+    		}
+    	}
+    	return true;
+    }
+    
     //make a move, hopefully after checking legality
     public void makeMove(Move m)
     {
@@ -200,5 +224,4 @@ public final class Board
             turnCount--;
         }
     }
-
 }
