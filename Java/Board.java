@@ -1,12 +1,18 @@
+/*
+    Board class for ChessAI.
+    Contains all elements of a chess game.
+*/
+
 package chessai;
 
-public final class Board {
-	
+public final class Board
+{
+    //vars
     Piece[][] board = new Piece[8][8];
-    Move[] moves = new Move[128];
-    //will be used for undoing moves, needs to account for taking pieces
+    private Move[] moves = new Move[128]; //will be used for undoing moves, needs to account for taking pieces
     int turnCount = 0;
 
+    //default constructor creats the initial position
     Board(){
         createBoard();
     }
@@ -14,17 +20,25 @@ public final class Board {
     //show a console version of the board
     public void displayBoard(Piece[][] board)
     {
+        System.out.print("\n");
+        
         for(int y = 0; y < 8; y++)
         {
-            System.out.print("-----------------\n|"); //17
+            System.out.print("---------------------------------\n|"); //17
             
             for (int x = 0; x < 8; x++)
             {
-                System.out.print(board[x][y].name + " ");
+                switch (board[x][y].color)
+                {
+                    case WHITE: System.out.print("w"); break;
+                    case BLACK: System.out.print("b"); break;
+                    case NONE: System.out.print(" "); break;
+                }
+                System.out.print(board[x][y].name + " |");
             }
             System.out.print("\n");
         }
-        System.out.print("-----------------");
+        System.out.print("---------------------------------\n");
     }
     
     //create the initial position
@@ -67,14 +81,17 @@ public final class Board {
     //check for legality
     public boolean isLegal(Move m){
 
-            //universal checks
+            //initial universal checks
+            
         //color check
         if(board[m.sx][m.sy].color != (turnCount % 2 == 0 ? Color.WHITE : Color.BLACK))
             return false;
         
-        //moving into own piece
+        //destination is own color piece
         if(board[m.ex][m.ey].color == (turnCount % 2 == 0 ? Color.WHITE : Color.BLACK))
             return false;
+        
+            //piece specific checks
         
         //pawn moving
         if(board[m.sx][m.sy].name == 'P') {
@@ -83,13 +100,15 @@ public final class Board {
                     
             //moving up
             switch (dy) {
-                case 1:
-                        ///needs en passant
+                case 1: 
+                        ///needs en passantm
                     //taking pieces
                     if(Math.abs(m.sx - m.ex) == 1) {
                         if(board[m.ex][m.ey].name == ' ')
                             return false;
                     }
+                    //single move up
+                    else if (m.sx == m.ex && board[m.ex][m.ey].name == ' ') return true;
                     else return false;
                     break;
                 case 2:
@@ -134,29 +153,26 @@ public final class Board {
         //king moving
         if(board[m.sx][m.sy].name == 'K'){
             // magnitude of all directional movement should be no greater than one
-            if(Math.abs(m.ex - m.sx) > 1){}
+            if(Math.abs(m.ex - m.sx) > 1 && Math.abs(m.ey - m.sy) > 1)
+                return false;
+            ///castling
         }
 
-        // piece specific checks end here
+            //piece specific checks end, check moving through other pieces
+        
+        //moving through pieces
+        if(board[m.sx][m.sy].name != 'N') //not for knights
+        {
+           for(int x = m.sx, y = m.sy; x != m.ex && y != m.ey;) {
+                if(y != m.ey) y += (m.sy < m.ey ? 1 : -1);
+                if(x != m.ex) x += (m.sx < m.ex ? 1 : -1);
 
-        if(m.ey - m.sy > 0){ // only traveling the y-axis
-            for(int y = m.sy; y < m.ey; y++){ // checks to see that it does not run through existing pieces.
-                if(board[m.sx][y].name != ' ' || m.sy+1 != m.ey){
+                if(board[x][y].name != ' ' && (x != m.ex || y != m.ey))
                     return false;
-                }
-            }
+            } 
         }
-        else if(Math.abs(m.ey - m.sy) > 0 && m.ex - m.sx > 0 && m.ey-m.sy == m.ex-m.sx){ // moving diagonally
-
-        }
-        else{ // only traveling the x-axis
-            for(int x = m.sx; x < m.ex; x++){ // checks to see that it does not run through existing pieces.
-                if(board[x][m.sy].name != ' ' || m.sx+1 != m.ex){
-                    return false;
-                }
-            }
-        }
-
+        
+        ///king in check
 
 
         // if has not returned false before here, it's legal
@@ -164,9 +180,25 @@ public final class Board {
     }
     
     //make a move, hopefully after checking legality
-    public void makeMove(Move move)
+    public void makeMove(Move m)
     {
-        
+        //currently cannot en passant or castle
+        board[m.ex][m.ey] = board[m.sx][m.sy];
+        board[m.sx][m.sy] = new Empty();
+        moves[turnCount] = m;
+        turnCount++;
+    }
+    
+    //undo a move by accessing moves stack, decrease turn count
+    public void undoMove()
+    {
+        //if a move has been made
+        if (turnCount > 0)
+        {
+            //currently does not account for taking pieces
+            board[moves[turnCount-1].sx][moves[turnCount].sy] = board[moves[turnCount-1].ex][moves[turnCount].ey];
+            turnCount--;
+        }
     }
 
 }
