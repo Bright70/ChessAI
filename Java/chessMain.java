@@ -10,6 +10,6 @@ public class chessMain
     {
         ChessAI ai = new ChessAI();
         Board board = new Board();
-        board.displayBoard(Board.board);
+        board.displayBoard(board.board);
     }
 }

@@ -22,6 +22,7 @@ public class Empty extends Piece
         value = -1;
         this.x = x;
         this.y = y;
+        name = ' ';
         this.color = Color.NONE;
     }
 }

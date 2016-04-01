@@ -21,8 +21,8 @@ public class King extends Piece
     {
         value = 3;
         this.x = x;
-        name = 'K';
         this.y = y;
+        name = 'K';
         this.color = color;
     }
 }

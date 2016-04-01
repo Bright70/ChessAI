@@ -6,27 +6,23 @@ package chessai;
 
 public class ChessAI
 {
-    Piece[][] board;
     
-    //returns an empty board
-    public Piece[][] emptyBoard()
+    public double evaluate(Board board)
     {
-        Piece[][] newBoard = new Piece[8][8];
+        double score = 0;
         
-        for (int x = 0; x < 8; x++)
+        return score;
+    }
+
+    public boolean isLegal(Move move, Board board)
+    {
+        //pawn moves
+        if (board.board[move.sx][move.sy].name == 'P')
         {
-            for (int y = 0; y < 8; y++)
-            {
-                newBoard[x][y] = new Empty();
-            }
+            
         }
         
-        return board;
+        return true;
     }
     
-    //takes a board and converts it to the board
-    public void importBoard()
-    {
-        
-    }
 }
