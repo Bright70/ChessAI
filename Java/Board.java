@@ -13,18 +13,17 @@ public final class Board
     int turnCount = 0;
 
     //default constructor creats the initial position
-    Board(){
+    Board() {
         createBoard();
     }
     
     //show a console version of the board
-    public void displayBoard(Piece[][] board)
-    {
-        System.out.print("\n");
+    public void displayBoard(Piece[][] board) {
+        System.out.print("\n    a   b   c   d   e   f   g   h\n");
         
         for(int y = 0; y < 8; y++)
         {
-            System.out.print("---------------------------------\n|"); //17
+            System.out.print("  ---------------------------------\n" + (8 - y) + " |"); //17
             
             for (int x = 0; x < 8; x++)
             {
@@ -38,11 +37,11 @@ public final class Board
             }
             System.out.print("\n");
         }
-        System.out.print("---------------------------------\n");
+        System.out.print("  ---------------------------------\n");
     }
     
     //create the initial position
-    public void createBoard(){
+    public void createBoard() {
 		
         Color color; color = Color.BLACK;
 		
@@ -79,133 +78,131 @@ public final class Board
     }
 
     //check for legality
-    public boolean isLegal(Move m){
+    public boolean isLegal(Move m) {
 
             //initial universal checks
-            
-        //color check
-        if(board[m.sx][m.sy].color != (turnCount % 2 == 0 ? Color.WHITE : Color.BLACK))
+        
+        //type check
+        if(m.piece.name == ' ') return false;
+        if(board[m.sx][m.sy] != m.piece) return false;
+        
+        //bounds check
+        if(m.sx > 7 || m.sx < 0 || m.sy > 7 || m.sy < 0 || m.ex > 7 || m.ex < 0 || m.ey > 7 || m.ey < 0)
             return false;
         
-        //destination is own color piece
+        //color check
+        if(board[m.sx][m.sy].color != (turnCount % 2 == 0 ? Color.WHITE : Color.BLACK)) 
+            return false;
+        
+        //destination is own color piece, also prevents same square movement
         if(board[m.ex][m.ey].color == (turnCount % 2 == 0 ? Color.WHITE : Color.BLACK))
             return false;
         
-            //piece specific checks
-        
-        //pawn moving
-        if(board[m.sx][m.sy].name == 'P') {
-            //find delta y, inverse if black's turn. should always be positive
-            int dy = (m.sy - m.ey) * (turnCount % 2 == 0 ? 1 : -1);
-                    
-            //moving up
-            switch (dy) {
-                case 1: 
-                        ///needs en passantm
-                    //taking pieces
-                    if(Math.abs(m.sx - m.ex) == 1) {
-                        if(board[m.ex][m.ey].name == ' ')
+        //piece specific checks
+        switch (board[m.sx][m.sy].name) {
+            //pawn
+            case 'P':
+                //find change in y, inverse if black's turn. should always be positive
+                int dy = (m.sy - m.ey) * (turnCount % 2 == 0 ? 1 : -1);
+                
+                //moving up
+                switch (dy) { 
+                    case 1:
+                        ///needs en passant
+                        //taking pieces
+                        if(Math.abs(m.sx - m.ex) == 1) {
+                            if(board[m.ex][m.ey].name == ' ')
+                                return false;
+                        }
+                        //single move up
+                        else if (m.sx == m.ex && board[m.ex][m.ey].name == ' ')
+                            return true;
+                        else return false;
+                        break;
+                    case 2: //double move forwards
+                        //check for in initial position
+                        if(!((turnCount % 2 == 0 && m.sy == 6) || (turnCount % 2 == 1 && m.sy == 1)) || board[m.ex][m.ey].name != ' ')
                             return false;
-                    }
-                    //single move up
-                    else if (m.sx == m.ex && board[m.ex][m.ey].name == ' ') return true;
-                    else return false;
-                    break;
-                case 2:
-                    //check for in initial position
-                    if(!((turnCount % 2 == 0 && m.sy == 6) || (turnCount % 2 == 1 && m.sy == 1)))
-                        return false;
-                    break;
-                default:
+                        break;
+                    default: return false; //any greater magnitude of dy is illegal
+                }
+                break;
+            //rook
+            case 'R':
+                //disallow trying to move in both dimensions
+                if(m.ey - m.sy != 0 && m.ex - m.sx != 0)
                     return false;
-            }
-            
+                break;
+            //knight
+            case 'N':
+                //knight moves 2 spaces in one direction, and 1 square in the other
+                if(!((Math.abs(m.ex - m.sx) == 1 && Math.abs(m.ey - m.sy) == 2) || 
+                        (Math.abs(m.ex - m.sx) == 2 && Math.abs(m.ey - m.sy) == 1)))
+                    return false;
+                break;
+            //bishop
+            case 'B':
+                //change in x and y are the same
+                if(Math.abs(m.ex - m.sx) != Math.abs(m.ey - m.sy))
+                    return false;
+                break;
+            //queen
+            case 'Q':
+                //checks of both bishop and rook
+                if((m.ey - m.sy != 0 && m.ex - m.sx != 0) && 
+                        (Math.abs(m.ex - m.sx) != Math.abs(m.ey - m.sy)))
+                    return false;
+                break;
+            //king
+            case 'K':
+                //magnitude of any movement should be no greater than one
+                if(Math.abs(m.ex - m.sx) > 1 && Math.abs(m.ey - m.sy) > 1)
+                    return false;
+                ///castling
+                break;
+            default: return false;
         }
-
-        //rook moving
-        if(board[m.sx][m.sy].name == 'R'){
-            // if is trying to move in both dimensions, disallow
-            if(Math.abs(m.ey - m.sy) > 0 && Math.abs(m.ex - m.sx) > 0) 
-                return false;
-        }
-
-        //knight moving
-        if(board[m.sx][m.sy].name == 'N'){
-            // knight can only legally move two on x/y axis, and then 1 on the axis that was not chosen first
-            if(!((Math.abs(m.ex - m.sx) == 1 && Math.abs(m.ey - m.sy) == 2) || (Math.abs(m.ex - m.sx) == 2 && Math.abs(m.ey - m.sy) == 1))) 
-                return false;
-        }
-
-        //bishop moving
-        if(board[m.sx][m.sy].name == 'B'){
-            // moving horizontally means that your x/y position will change in a same amount (disregarding signs)
-            if(Math.abs(m.ex - m.sx) != Math.abs(m.ey - m.sy))
-                return false;
-        }
-
-        //queen moving
-        if(board[m.sx][m.sy].name == 'Q'){
-            // if moving diagonally, same check as bishop
-            if((Math.abs(m.ey - m.sy) > 0 && Math.abs(m.ex - m.sx) > 0) && (Math.abs(m.ex - m.sx) != Math.abs(m.ey - m.sy)))
-                return false;
-        }
-
-        //king moving
-        if(board[m.sx][m.sy].name == 'K'){
-            // magnitude of all directional movement should be no greater than one
-            if(Math.abs(m.ex - m.sx) > 1 && Math.abs(m.ey - m.sy) > 1)
-                return false;
-            ///castling
-        }
-
-            //piece specific checks end, check moving through other pieces
         
         //moving through pieces
-        if(board[m.sx][m.sy].name != 'N') //not for knights
-        {
-           for(int x = m.sx, y = m.sy; x != m.ex && y != m.ey;) {
-                if(y != m.ey) y += (m.sy < m.ey ? 1 : -1);
+        if(board[m.sx][m.sy].name != 'N') { //not for knights
+           for(int x = m.sx, y = m.sy; x != m.ex || y != m.ey;) {
                 if(x != m.ex) x += (m.sx < m.ex ? 1 : -1);
+                if(y != m.ey) y += (m.sy < m.ey ? 1 : -1);
 
-                if(board[x][y].name != ' ' && (x != m.ex || y != m.ey))
+                if(board[x][y].name != ' ' && !(x == m.ex && y == m.ey))
                     return false;
             } 
         }
         
         ///king in check
 
-
-        // if has not returned false before here, it's legal
+        // if has not returned false before here, must be legal
         return true;
     }
     
-    public boolean checkMate(){
-    	Color color;
-    	if(turnCount % 2 == 0)color = Color.WHITE;
-    	else color = Color.BLACK;
-    	
-    	for(int x = 0; x < 8; x++){
-    		for(int y = 0; y < 8; y++){
-    			if(board[x][y].name == 'K' && board[x][y].color == color){
-    				// will check around 3x3 square surrounding king to see if any legal moves remaining
-    				for(int ex = x-1; x < x+1; ex++){
-		    			for(int ey = y-1; y < y+1; y++){
-		    				if(x > 0 && y > 0){ // prevents arrayOutOfBounds
-		    					Move move = new Move(x, y, ex, ey, board[x][y]);
-			    				if(isLegal(move))
-			    					return false; // if any legal move is found, not checkmate
-		    				}	
-		    			}
-		    		}
-    			}
-    		}
+    //check for checkmate
+    public boolean checkmated() {
+        //find the king
+    	for(int x = 0; x < 8; x++) {
+            for(int y = 0; y < 8; y++) {
+                if(board[x][y].name == 'K' && board[x][y].color == (turnCount % 2 == 0 ? Color.WHITE : Color.BLACK)){
+                    // check 3x3 square surrounding king to see if any legal moves remain
+                    for(int ex = x-1; ex < x+2; ex++){
+                        for(int ey = y-1; ey < y+2; y++){
+                            if(ex >= 0 && ey >= 0) // prevents arrayOutOfBounds
+                                if(isLegal(new Move(x, y, ex, ey, board[x][y])))
+                                    return false; // if any legal move is found, not checkmate
+                        }
+                    }
+                    break;
+                }
+            }
     	}
     	return true;
     }
     
     //make a move, hopefully after checking legality
-    public void makeMove(Move m)
-    {
+    public void makeMove(Move m) {
         //currently cannot en passant or castle
         board[m.ex][m.ey] = board[m.sx][m.sy];
         board[m.sx][m.sy] = new Empty();
@@ -214,14 +211,15 @@ public final class Board
     }
     
     //undo a move by accessing moves stack, decrease turn count
-    public void undoMove()
-    {
+    public void undoMove() {
         //if a move has been made
-        if (turnCount > 0)
-        {
+        if (turnCount > 0) {
             //currently does not account for taking pieces
-            board[moves[turnCount-1].sx][moves[turnCount].sy] = board[moves[turnCount-1].ex][moves[turnCount].ey];
+            board[moves[turnCount-1].sx][moves[turnCount-1].sy] = 
+                    board[moves[turnCount-1].ex][moves[turnCount-1].ey];
+            board[moves[turnCount-1].ex][moves[turnCount-1].ey] = new Empty();
             turnCount--;
         }
     }
+
 }
