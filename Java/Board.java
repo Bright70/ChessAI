@@ -156,7 +156,7 @@ public final class Board
             //king
             case 'K':
                 //magnitude of any movement should be no greater than one
-                if(Math.abs(m.ex - m.sx) > 1 && Math.abs(m.ey - m.sy) > 1)
+                if(Math.abs(m.ex - m.sx) > 1 || Math.abs(m.ey - m.sy) > 1)
                     return false;
                 ///castling
                 break;
@@ -188,7 +188,7 @@ public final class Board
                 if(board[x][y].name == 'K' && board[x][y].color == (turnCount % 2 == 0 ? Color.WHITE : Color.BLACK)){
                     // check 3x3 square surrounding king to see if any legal moves remain
                     for(int ex = x-1; ex < x+2; ex++){
-                        for(int ey = y-1; ey < y+2; y++){
+                        for(int ey = y-1; ey < y+2; ey++){
                             if(ex >= 0 && ey >= 0) // prevents arrayOutOfBounds
                                 if(isLegal(new Move(x, y, ex, ey, board[x][y])))
                                     return false; // if any legal move is found, not checkmate
