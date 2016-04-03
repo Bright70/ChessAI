@@ -6,13 +6,12 @@ package chessai;
 
 import java.util.Scanner;
 
-public class chessMain
-{
-    static Scanner in = new Scanner(System.in);
+public class chessMain {
 	
     public static void main(String[] args) {
         
         //create new game and vars
+        Scanner in = new Scanner(System.in);
         ChessAI ai = new ChessAI();
         Board game = new Board();
         String input;
@@ -32,6 +31,7 @@ public class chessMain
             if(game.isLegal(move)) game.makeMove(move);
             else System.out.print("Illegal move.");
             
+            System.out.print("\nComputer evaluation: " + ai.evaluate(game) + "\n");
             game.displayBoard(game.board);
             
         } while(true); //win condition
