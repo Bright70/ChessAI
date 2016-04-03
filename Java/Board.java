@@ -9,13 +9,17 @@ public final class Board
 {
     //vars
     Piece[][] board = new Piece[8][8];
-    boolean[][] hasMoved = new boolean[3][2]; // rook, king, rook (0 is black, 1 is white on 2nd dimension)
+    boolean[][] hasMoved = new boolean[3][2]; //rook, king, rook (0 is black, 1 is white on 2nd dimension)
     private Move[] moves = new Move[128]; //will be used for undoing moves, needs to account for taking pieces
     int turnCount = 0;
 
-    //default constructor creates the initial position
+    //default constructor
     Board() {
         createBoard();
+        for(int x = 0; x < 3; x++)
+            for(int y = 0; y < 2; y++)
+                hasMoved[x][y] = false;
+        for(int i = 0; i < 128; i++) moves[i] = new Move();
     }
     
     //show a console version of the board
@@ -156,24 +160,22 @@ public final class Board
                 break;
             //king
             case 'K':
-                //magnitude of any movement should be no greater than one unless castling
-            	if(Math.abs(m.ex - m.sx) == 2 && Math.abs(m.ey - m.sy) == 0){ // castling right
-            		if(m.piece.color == Color.WHITE && !hasMoved[1][1] && !hasMoved[2][1]){
-            			break; // don't check elsewhere, this is legal. If it's trying to move through pieces, it will get caught later
-            		}
-            		if(m.piece.color == Color.BLACK && !hasMoved[1][0] && !hasMoved[2][0]){
-            			break; // don't check elsewhere, this is legal. If it's trying to move through pieces, it will get caught later
-            		}
+                //castling. if legal, only check moving through other pieces later
+            	if(m.ex - m.sx == 2 && m.sy == m.ey) { //castling kingside
+                    if(m.piece.color == Color.WHITE && !hasMoved[2][1] && !hasMoved[1][1])
+                        break;
+                    else if(m.piece.color == Color.BLACK && !hasMoved[2][0] && !hasMoved[1][0])
+                        break;
+                    else return false;
             	}
-            	if(Math.abs(m.ex - m.sx) == 3 && Math.abs(m.ey - m.sy) == 0){ // castling left
-            		if(m.piece.color == Color.WHITE && !hasMoved[1][1] && !hasMoved[0][1]){
-            			break; // don't check elsewhere, this is legal. If it's trying to move through pieces, it will get caught later
-            		}
-            		if(m.piece.color == Color.BLACK && !hasMoved[1][0] && !hasMoved[0][0]){
-            			break; // don't check elsewhere, this is legal. If it's trying to move through pieces, it will get caught later
-            		}
+                else if(m.sx - m.ex == 2 && m.sy == m.ey) { //castling queenside, extra checke
+                    if(m.piece.color == Color.WHITE && !hasMoved[1][1] && !hasMoved[0][1] && board[1][m.sy].name == ' ')
+                        break;
+                    else if(m.piece.color == Color.BLACK && !hasMoved[1][0] && !hasMoved[0][0] && board[1][m.sy].name == ' ')
+                        break;
+                    else return false;
             	}
-            	// if not castling use regular check
+            	//if not castling, directional movement <= 1
                 if(Math.abs(m.ex - m.sx) > 1 || Math.abs(m.ey - m.sy) > 1)
                     return false;
                 break;
@@ -204,13 +206,16 @@ public final class Board
             for(int y = 0; y < 8; y++) {
                 if(board[x][y].name == 'K' && board[x][y].color == (turnCount % 2 == 0 ? Color.WHITE : Color.BLACK)){
                     // check 3x3 square surrounding king to see if any legal moves remain
-                    for(int ex = x-1; ex < x+2; ex++){
-                        for(int ey = y-1; ey < y+2; ey++){
-                            if(ex >= 0 && ey >= 0) // prevents arrayOutOfBounds
-                                if(isLegal(new Move(x, y, ex, ey, board[x][y])))
+                    for(int ex = x - 1; ex < x + 2; ex++) {
+                        for(int ey = y - 1; ey < y + 2; ey++) {
+                            if(ex >= 0 && ex < 8 && ey >= 0 && ey < 8) { // prevents arrayOutOfBounds
+                                if(isLegal(new Move(x, y, ex, ey, board[x][y]))) {
                                     return false; // if any legal move is found, not checkmate
+                                }
+                            }
                         }
                     }
+                    x = 8;
                     break;
                 }
             }
@@ -220,23 +225,24 @@ public final class Board
     
     //make a move, hopefully after checking legality
     public void makeMove(Move m) {
-        //currently cannot en passant
-    	
-    	if(m.piece.name == 'K'){ // check if castling
-    		board[m.ex][m.sy] = board[m.sx][m.sy];
-    		if(Math.abs(m.ex - m.sx) == 2){ // if moving left
-    			board[m.ex-1][m.sy] = board[7][m.sy]; // place rook to left of king
-    		}
-    		if(Math.abs(m.ex - m.sx) == 3){ // if moving right
-    			board[m.ex+1][m.sy] = board[0][m.sy]; // place rook to right of king
-    		}
+        ///currently cannot en passant
+        
+        //move pieces
+        board[m.ex][m.ey] = board[m.sx][m.sy];
+        board[m.sx][m.sy] = new Empty();
+        //castling
+    	if(m.piece.name == 'K') {
+            if(m.ex - m.sx == 2) { //kingside
+                board[m.ex-1][m.sy] = board[7][m.sy]; // place rook to left of king
+                board[7][m.sy] = new Empty();
+            }
+            if(m.sx - m.ex == 2) { //queenside
+                board[m.ex+1][m.sy] = board[0][m.sy]; // place rook to right of king
+                board[0][m.sy] = new Empty();
+            }
     	}
-    	else{ // if not castling use standard move creation, might slow things down a bit...
-    		board[m.ex][m.ey] = board[m.sx][m.sy];
-    		board[m.sx][m.sy] = new Empty();
-    	}
     	
-        moves[turnCount] = m; // may not store castling properly
+        moves[turnCount] = m; //does not store castling or capturing
         turnCount++;
     }
     
@@ -244,7 +250,7 @@ public final class Board
     public void undoMove() {
         //if a move has been made
         if (turnCount > 0) {
-            //currently does not account for taking pieces
+            ///currently does not account for taking pieces
             board[moves[turnCount-1].sx][moves[turnCount-1].sy] = 
                     board[moves[turnCount-1].ex][moves[turnCount-1].ey];
             board[moves[turnCount-1].ex][moves[turnCount-1].ey] = new Empty();
