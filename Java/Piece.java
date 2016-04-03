@@ -4,15 +4,14 @@
 
 package chessai;
 
-public class Piece
-{
-    int value, x, y;
+public class Piece {
+    int x, y;
+    double value;
     char name;
     Color color;
     
     //default constructor
-    Piece()
-    {
+    Piece() {
         value = -1;
         x = -1;
         y = -1;
@@ -21,8 +20,7 @@ public class Piece
     }
     
     //piece constructor
-    Piece(Piece p)
-    {
+    Piece(Piece p) {
         value = p.value;
         x = p.x;
         y = p.y;
@@ -31,8 +29,7 @@ public class Piece
     }
     
     //coordinate constructor
-    Piece(int x, int y)
-    {
+    Piece(int x, int y) {
         value = -1;
         this.x = x;
         this.y = y;
