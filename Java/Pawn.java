@@ -10,18 +10,14 @@ public class Pawn extends Piece
     Pawn()
     {
         value = 1;
-        x = -1;
-        y = -1;
         name = 'P';
         color = Color.NONE;
     }
     
     //coordinate and color constructor
-    Pawn(int x, int y, Color color)
+    Pawn(Color color)
     {
         value = 1;
-        this.x = x;
-        this.y = y;
         name = 'P';
         this.color = color;
     }

@@ -115,7 +115,7 @@ public class chessMain {
             }
         }
         
-//        System.out.print("\n" + sx + " " + sy + " to " + ex + " " + ey + "\n"); //debug
+        System.out.print("\n" + sx + " " + sy + " to " + ex + " " + ey + "\n"); //debug
         
         return new Move(sx, ex, sy, ey, (sx >= 0 && sy >= 0 ? game.board[sx][sy] : new Empty()));
     }

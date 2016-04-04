@@ -61,21 +61,21 @@ public final class Board
         for(int x = 0; x < 2; x++) {
             if(x == 1) color = Color.WHITE;
 
-            board[0][y] = new Rook(0, y, color);
-            board[7][y] = new Rook(7, y, color);
+            board[0][y] = new Rook(color);
+            board[7][y] = new Rook(color);
 
-            board[1][y] = new Knight(1, y, color);		
-            board[6][y] = new Knight(6, y, color);
+            board[1][y] = new Knight(color);		
+            board[6][y] = new Knight(color);
 
-            board[2][y] = new Bishop(2, y, color);
-            board[5][y] = new Bishop(5, y, color);
+            board[2][y] = new Bishop(color);
+            board[5][y] = new Bishop(color);
 
-            board[3][y] = new Queen(3, y, color);
-            board[4][y] = new King(4, y, color);
+            board[3][y] = new Queen(color);
+            board[4][y] = new King(color);
             if(y == 0) y++;
             if(y == 7) y--;
             for(int a = 0; a < 8; a++){
-                board[a][y] = new Pawn(a, y, color);
+                board[a][y] = new Pawn(color);
             }
             
             y = 7;
@@ -113,10 +113,21 @@ public final class Board
                 //moving up
                 switch (dy) { 
                     case 1:
-                        ///needs en passant
                         //taking pieces
                         if(Math.abs(m.sx - m.ex) == 1) {
-                            if(board[m.ex][m.ey].name == ' ')
+                        	Move lm = moves[turnCount-1];
+                        	System.out.println("Name: " + lm.piece.name);
+                        	System.out.println("sx = " + lm.sx);
+                        	System.out.println("ex = " + lm.ex);
+                        	System.out.println("sy = " + lm.sy);
+                        	System.out.println("ey = " + lm.ey);
+                        	if(turnCount > 0 && lm.piece.name == 'P' 
+                        	&& Math.abs(lm.ey - lm.sy) == 2 
+                        	&& (lm.piece.color == (turnCount % 2 == 0 ? Color.BLACK : Color.WHITE))
+                        	&& lm.ex == m.ex && lm.ey == m.sy){
+                        		break;
+                        	}
+                        	else if(board[m.ex][m.ey].name == ' ')
                                 return false;
                         }
                         //single move up
@@ -168,7 +179,7 @@ public final class Board
                         break;
                     else return false;
             	}
-                else if(m.sx - m.ex == 2 && m.sy == m.ey) { //castling queenside, extra checke
+                else if(m.sx - m.ex == 2 && m.sy == m.ey) { //castling queenside, extra check
                     if(m.piece.color == Color.WHITE && !hasMoved[1][1] && !hasMoved[0][1] && board[1][m.sy].name == ' ')
                         break;
                     else if(m.piece.color == Color.BLACK && !hasMoved[1][0] && !hasMoved[0][0] && board[1][m.sy].name == ' ')
@@ -225,13 +236,13 @@ public final class Board
     
     //make a move, hopefully after checking legality
     public void makeMove(Move m) {
-        ///currently cannot en passant
         
         //move pieces
         board[m.ex][m.ey] = board[m.sx][m.sy];
         board[m.sx][m.sy] = new Empty();
         //castling
     	if(m.piece.name == 'K') {
+    		hasMoved[1][(turnCount % 2 == 0 ? 0 : 1)] = true;
             if(m.ex - m.sx == 2) { //kingside
                 board[m.ex-1][m.sy] = board[7][m.sy]; // place rook to left of king
                 board[7][m.sy] = new Empty();
@@ -240,6 +251,14 @@ public final class Board
                 board[m.ex+1][m.sy] = board[0][m.sy]; // place rook to right of king
                 board[0][m.sy] = new Empty();
             }
+    	}
+    	else if(m.piece.name == 'R'){
+    		// if a rook is moved, set hasMoved to true to prevent castling
+    		hasMoved[(m.sx == 7 ? 2 : 0)][(turnCount % 2 == 0 ? 0 : 1)] = true;
+    	}
+    	else if(m.piece.name == 'P' && Math.abs(m.ex - m.sx) == 1 && Math.abs(m.ey - m.sy) == 1
+    				&& board[m.ex][m.ey].name == ' '){ // en passant
+    		board[m.ex][m.sy] = new Empty();
     	}
     	
         moves[turnCount] = m; //does not store castling or capturing
