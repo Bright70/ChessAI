@@ -50,8 +50,9 @@ public class chessMain {
             ex = Integer.parseInt(in.substring(4, 5));
             ey = Integer.parseInt(in.substring(6, 7));
         }
-        //chess notational input. note: 'a' = 97, 'h' = 104
-        else { 
+        //chess notational input. note: 'a' = 97, 'h' = 104, '1' = 49, '8' = 56
+        else if(in.length() <= 5 && in.charAt(in.length() - 1) >= 49 && in.charAt(in.length() - 1) <= 56
+                && in.charAt(in.length() - 2) >= 97 && in.charAt(in.length() - 2) <= 104) { 
             //remove 'take' notation: unneeded.
             in = in.replaceFirst("x", "");
 
@@ -114,8 +115,11 @@ public class chessMain {
                 }
             }
         }
+        //probably illegal move
+        else return new Move();
         
-        System.out.print("\n" + sx + " " + sy + " to " + ex + " " + ey + "\n"); //debug
+        
+//        System.out.print("\n" + sx + " " + sy + " to " + ex + " " + ey + "\n"); //debug
         
         return new Move(sx, ex, sy, ey, (sx >= 0 && sy >= 0 ? game.board[sx][sy] : new Empty()));
     }
