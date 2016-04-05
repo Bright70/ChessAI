@@ -1,5 +1,8 @@
 /*
     Temporary interface for chessAI.
+    Todo: fix castling for white.
+    isLegal is super broke, calls itself ~500000 times
+    evaluate is kind of broken, probably because it calls isLegal
  */
 
 package chessai;
