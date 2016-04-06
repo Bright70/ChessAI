@@ -35,11 +35,12 @@ public class ChessAI {
                 p = board.board[x][y];
                 
                 if(p.name != ' ') {
+                	// should eventually optimize for individual pieces
                     for(int ex = 0; ex < 8; ex++) {
                         for(int ey = 0; ey < 8; ey++) {
                             if(board.turnCount % 2 != (p.color == Color.WHITE ? 0 : 1))
                                 board.turnCount++; //change turns to check legality
-                            if(board.isLegal(new Move(x, y, ex, ey, p)))
+                            if(board.isLegal(new Move(x, y, ex, ey, p, null)))
                                 legalMoves++;
                             board.turnCount = turnCount;
                         }

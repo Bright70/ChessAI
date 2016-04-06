@@ -1,6 +1,10 @@
 /*
     Board class for ChessAI.
     Contains all elements of a chess game.
+    
+    TODO:
+    Can take pieces while castling
+    Can castle with other pieces so long as bool is false
 */
 
 package chessai;
@@ -83,6 +87,8 @@ public final class Board
     public boolean isLegal(Move m) {
 
             //initial universal checks
+    	
+    	System.out.println("Is legal starts");
         
         //type check
         if(m.piece.name == ' ') return false;
@@ -272,7 +278,7 @@ public final class Board
                     for(int ex = x - 1; ex < x + 2; ex++) {
                         for(int ey = y - 1; ey < y + 2; ey++) {
                             if(ex >= 0 && ex < 8 && ey >= 0 && ey < 8) { // prevents arrayOutOfBounds
-                                if(isLegal(new Move(x, y, ex, ey, board[x][y]))) {
+                                if(isLegal(new Move(x, ex, y, ey, board[x][y], board[ex][ey]))) {
                                     return false; // if any legal move is found, not checkmate
                                 }
                             }
@@ -288,32 +294,34 @@ public final class Board
     
     //make a move, hopefully after checking legality
     public void makeMove(Move m) {
+    	//special moves
         
-        //move pieces
-        board[m.ex][m.ey] = board[m.sx][m.sy];
-        board[m.sx][m.sy] = new Empty();
-        //castling
+    	//castling
     	if(m.piece.name == 'K') {
     		hasMoved[1][(turnCount % 2 == 0 ? 0 : 1)] = true;
             if(m.ex - m.sx == 2) { //kingside
-                board[m.ex-1][m.sy] = board[7][m.sy]; // place rook to left of king
-                board[7][m.sy] = new Empty();
+                // place rook to left of king
+                swap(m.ex-1, 7, m.sy, m.sy);
             }
             if(m.sx - m.ex == 2) { //queenside
-                board[m.ex+1][m.sy] = board[0][m.sy]; // place rook to right of king
-                board[0][m.sy] = new Empty();
+                // place rook to right of king
+                swap(m.ex+1, 0, m.sy, m.sy);
             }
     	}
     	else if(m.piece.name == 'R'){
     		// if a rook is moved, set hasMoved to true to prevent castling
-    		hasMoved[(m.sx == 7 ? 2 : 0)][(turnCount % 2 == 0 ? 0 : 1)] = true;
+    		hasMoved[(m.sx == 7 ? 2 : 0)][(turnCount % 2 == 0 ? 1 : 0)] = true;
     	}
     	else if(m.piece.name == 'P' && Math.abs(m.ex - m.sx) == 1 && Math.abs(m.ey - m.sy) == 1
     				&& board[m.ex][m.ey].name == ' '){ // en passant
     		board[m.ex][m.sy] = new Empty();
     	}
     	
-        moves[turnCount] = m; //does not store castling or capturing
+    	//move pieces
+        board[m.ex][m.ey] = board[m.sx][m.sy];
+        board[m.sx][m.sy] = new Empty();
+    	
+        moves[turnCount] = m; //does not store castling
         turnCount++;
     }
     
@@ -321,12 +329,33 @@ public final class Board
     public void undoMove() {
         //if a move has been made
         if (turnCount > 0) {
-            ///currently does not account for taking pieces
-            board[moves[turnCount-1].sx][moves[turnCount-1].sy] = 
-                    board[moves[turnCount-1].ex][moves[turnCount-1].ey];
-            board[moves[turnCount-1].ex][moves[turnCount-1].ey] = new Empty();
-            turnCount--;
+        	turnCount--;
+        	Move m = moves[turnCount];
+            board[m.sx][m.sy] = board[m.ex][m.ey];
+            board[m.ex][m.ey] = m.pieceCaptured;
+            if(m.piece.name == 'P' && m.pieceCaptured.name == ' ' && (m.ex != m.sx)){
+            	board[m.ex][m.sy] = new Pawn((turnCount % 2 == 1 ? Color.WHITE : Color.BLACK));
+            }
+            else if(m.piece.name == 'K' && m.ex - m.sx == 2){
+            	System.out.println("Undo castling");
+            	//swap(m.sx, m.ex, m.sy, m.ey);
+            	hasMoved[1][(turnCount % 2 == 1 ? 1 : 0)] = false;
+            	swap(5, 7, m.sy, m.ey);
+            	hasMoved[2][(turnCount % 2 == 1 ? 1 : 0)] = false;
+            }
+            else if(m.piece.name == 'K' && m.ex - m.sx == -2){
+            	System.out.println("Undo castling");
+            	//swap(m.sx, m.ex, m.sy, m.ey);
+            	hasMoved[1][(turnCount % 2 == 1 ? 1 : 0)] = false;
+            	swap(0, 3, m.sy, m.ey);
+            	hasMoved[0][(turnCount % 2 == 1 ? 1 : 0)] = false;
+            }
         }
     }
-
+    
+    public void swap(int sx, int ex, int sy, int ey){
+    	Piece tmp = board[sx][sy];
+    	board[sx][sy] = board[ex][ey];
+    	board[ex][ey] = tmp;
+    }
 }
