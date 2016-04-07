@@ -403,6 +403,10 @@ public final class Board {
             	swap(0, 3, m.sy, m.ey);
             	hasMoved[0][(turnCount % 2 == 1 ? 1 : 0)] = false;
             }
+            else if(m.piece.name == 'P' && (m.ey == 7 || m.ey == 0)){
+	    	board[m.ex][m.ey] = m.pieceCaptured;
+		board[m.sx][m.sy] = new Pawn(turnCount % 2 == 0 ? Color.WHITE : Color.BLACK);
+	    }
         }
     }
     
