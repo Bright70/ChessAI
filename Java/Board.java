@@ -321,54 +321,55 @@ public final class Board {
     
     //make a move, hopefully after checking legality
     public void makeMove(Move m) {
-    	//special moves
-        
-    	//castling
-    	if(m.piece.name == 'K') {
-    		hasMoved[1][(turnCount % 2 == 0 ? 0 : 1)] = true;
-            if(m.ex - m.sx == 2) { //kingside
-                // place rook to left of king
-                swap(m.ex-1, 7, m.sy, m.sy);
-            }
-            if(m.sx - m.ex == 2) { //queenside
-                // place rook to right of king
-                swap(m.ex+1, 0, m.sy, m.sy);
-            }
-    	}
-    	else if(m.piece.name == 'R'){
-    		// if a rook is moved, set hasMoved to true to prevent castling
-    		hasMoved[(m.sx == 7 ? 2 : 0)][(turnCount % 2 == 0 ? 1 : 0)] = true;
-    	}
-    	else if(m.piece.name == 'P'){
-		if(Math.abs(m.ex - m.sx) == 1 && Math.abs(m.ey - m.sy) == 1 && board[m.ex][m.ey].name == ' '){ // en passant
-    			board[m.ex][m.sy] = new Empty();
-    		}
-		if((m.ey == 0 && turnCount % 2 == 0) || (m.ey == 8 && turnCount %2 == 1)){
-			// shouldnt interact with user, temporary
-			System.out.println("Enter piece you want to promote to: ");
-			String piece = chessMain.in.next();
-			Color color = (turnCount % 2 == 0 ? Color.WHITE : Color.BLACK);
-			switch(piece.charAt(0)){
-				case 'Q':
-					board[m.sx][m.sy] = new Queen(color);
-					break;
-				case 'R':
-					board[m.sx][m.sy] = new Rook(color);
-					break;
-				case 'N':
-					board[m.sx][m.sy] = new Rook(color);
-					break;
-				case 'B':
-					board[m.sx][m.sy] = new Rook(color);
-					break;
-				default:
-					board[m.sx][m.sy] = new Queen(color);
-					System.out.println("No piece was created, input invalid");
-					break;
-			}
-			chessMain.in.nextLine();
-		}
-	}
+            //special moves
+        //castling
+        switch (m.piece.name) {
+            case 'K':
+                hasMoved[1][(turnCount % 2 == 0 ? 0 : 1)] = true;
+                if(m.ex - m.sx == 2) { //kingside
+                    // place rook to left of king
+                    swap(m.ex-1, 7, m.sy, m.sy);
+                }
+                else if(m.sx - m.ex == 2) { //queenside
+                    // place rook to right of king
+                    swap(m.ex+1, 0, m.sy, m.sy);
+                }   break;
+            case 'R':
+                // if a rook is moved, set hasMoved to true to prevent castling
+                hasMoved[(m.sx == 7 ? 2 : 0)][(turnCount % 2 == 0 ? 1 : 0)] = true;
+                break;
+            case 'P':
+                if(Math.abs(m.ex - m.sx) == 1 && Math.abs(m.ey - m.sy) == 1 && board[m.ex][m.ey].name == ' ') { // en passant
+                    board[m.ex][m.sy] = new Empty();
+                }
+                else if((m.ey == 0 && turnCount % 2 == 0) || (m.ey == 8 && turnCount %2 == 1)) {
+                    // shouldnt interact with user, temporary
+                    System.out.println("Enter piece you want to promote to: ");
+                    String piece = chessMain.in.next();
+                    Color color = (turnCount % 2 == 0 ? Color.WHITE : Color.BLACK);
+                    switch(piece.charAt(0)){
+                        case 'Q':
+                            board[m.sx][m.sy] = new Queen(color);
+                            break;
+                        case 'R':
+                            board[m.sx][m.sy] = new Rook(color);
+                            break;
+                        case 'N':
+                            board[m.sx][m.sy] = new Rook(color);
+                            break;
+                        case 'B':
+                            board[m.sx][m.sy] = new Rook(color);
+                            break;
+                        default:
+                            board[m.sx][m.sy] = new Queen(color);
+                            System.out.println("No piece was created, input invalid");
+                            break;
+                    }
+                    chessMain.in.nextLine();
+                }   break;
+            default:
+                break;
+        }
     	
     	//move pieces
         board[m.ex][m.ey] = board[m.sx][m.sy];
