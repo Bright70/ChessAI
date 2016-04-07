@@ -10,11 +10,12 @@ package chessai;
 import java.util.Scanner;
 
 public class chessMain {
+    
+    static Scanner in = new Scanner(System.in);
 	
     public static void main(String[] args) {
         
         //create new game and vars
-        Scanner in = new Scanner(System.in);
         ChessAI ai = new ChessAI();
         Board game = new Board();
         String input;
@@ -47,7 +48,7 @@ public class chessMain {
         int sx = -1, ex, sy = -1, ey;
         
         if(in.equals("undo")){
-        	game.undoMove();
+            game.undoMove();
         }
         
         //coordinate input
@@ -124,7 +125,6 @@ public class chessMain {
         }
         //probably illegal move
         else return new Move();
-        
         
 //        System.out.print("\n" + sx + " " + sy + " to " + ex + " " + ey + "\n"); //debug
         
