@@ -9,8 +9,7 @@
 
 package chessai;
 
-public final class Board
-{
+public final class Board {
     //vars
     Piece[][] board = new Piece[8][8];
     boolean[][] hasMoved = new boolean[3][2]; //rook, king, rook (0 is black, 1 is white on 2nd dimension)
@@ -204,8 +203,7 @@ public final class Board
         
         //player's king in check
         makeMove(m);
-        if(isInCheck(turnCount % 2 == 0 ? Color.BLACK : Color.WHITE))
-        {
+        if(isInCheck(turnCount % 2 == 0 ? Color.BLACK : Color.WHITE)) {
             undoMove();
             return false;
         }
@@ -292,16 +290,33 @@ public final class Board
                     for(int i = x + 1, j = y + 1; i < 8 && j < 8; i++, j++)
                         if(board[i][j].name != ' ')
                             if(isLegal(new Move(i, x, j, y, board[i][j], board[x][y])))
-                                return false;
+                                return true;
                             else break;
 
                     ///knights
+                    if(x-2 >= 0 && y-1 >= 0 && board[x-2][y-1].name == 'N' && isLegal(new Move(x-2, x, y-1, y, board[x-2][y-1], board[x][y])))
+                        return true;
+                    if(x+2 < 8 && y-1 >= 0 && board[x+2][y-1].name == 'N' && isLegal(new Move(x+2, x, y-1, y, board[x+2][y-1], board[x][y])))
+                        return true;
+                    if(x-2 >= 0 && y+1 < 8 && board[x-2][y+1].name == 'N' && isLegal(new Move(x-2, x, y+1, y, board[x-2][y+1], board[x][y])))
+                        return true;
+                    if(x+2 < 8 && y+1 < 8 && board[x+2][y+1].name == 'N' && isLegal(new Move(x+2, x, y+1, y, board[x+2][y+1], board[x][y])))
+                        return true;
+                    if(x-1 >= 0 && y-2 >= 0 && board[x-1][y-2].name == 'N' && isLegal(new Move(x-1, x, y-2, y, board[x-1][y-2], board[x][y])))
+                        return true;
+                    if(x+1 < 8 && y-2 >= 0 && board[x+1][y-2].name == 'N' && isLegal(new Move(x+1, x, y-2, y, board[x+1][y-2], board[x][y])))
+                        return true;
+                    if(x-1 >= 0 && y+2 < 8 && board[x-1][y+2].name == 'N' && isLegal(new Move(x-1, x, y+2, y, board[x-1][y+2], board[x][y])))
+                        return true;
+                    if(x+1 < 8 && y+2 < 8 && board[x+1][y+2].name == 'N' && isLegal(new Move(x+1, x, y+2, y, board[x+1][y+2], board[x][y])))
+                        return true;
 
                     x = 8; break;
                 }
             }
     	}
-    	return true;
+        
+    	return false;
     }
     
     //make a move, hopefully after checking legality
