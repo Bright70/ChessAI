@@ -342,7 +342,7 @@ public final class Board {
                 if(Math.abs(m.ex - m.sx) == 1 && Math.abs(m.ey - m.sy) == 1 && board[m.ex][m.ey].name == ' ') { // en passant
                     board[m.ex][m.sy] = new Empty();
                 }
-                else if((m.ey == 0 && turnCount % 2 == 0) || (m.ey == 8 && turnCount %2 == 1)) {
+                else if((m.ey == 0 && turnCount % 2 == 0) || (m.ey == 7 && turnCount %2 == 1)) {
                     // shouldnt interact with user, temporary
                     System.out.println("Enter piece you want to promote to: ");
                     String piece = chessMain.in.next();
@@ -355,10 +355,10 @@ public final class Board {
                             board[m.sx][m.sy] = new Rook(color);
                             break;
                         case 'N':
-                            board[m.sx][m.sy] = new Rook(color);
+                            board[m.sx][m.sy] = new Knight(color);
                             break;
                         case 'B':
-                            board[m.sx][m.sy] = new Rook(color);
+                            board[m.sx][m.sy] = new Bishop(color);
                             break;
                         default:
                             board[m.sx][m.sy] = new Queen(color);
