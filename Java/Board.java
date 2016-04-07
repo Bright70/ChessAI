@@ -249,49 +249,49 @@ public final class Board
                     //left
                     for(int i = x - 1; i >= 0; i--)
                         if(board[i][y].name != ' ')
-                            if(isLegal(new Move(i, x, y, y, board[i][y])))
+                            if(isLegal(new Move(i, x, y, y, board[i][y], board[x][y])))
                                 return true;
                             else break;
                     //right
                     for (int i = x + 1; i < 8; i++)
                         if(board[i][y].name != ' ')
-                            if(isLegal(new Move(i, x, y, y, board[i][y])))
+                            if(isLegal(new Move(i, x, y, y, board[i][y], board[x][y])))
                                 return true;
                             else break;
                     //up
                     for(int i = y - 1; i >= 0; i--)
                         if(board[x][i].name != ' ')
-                            if(isLegal(new Move(x, x, i, y, board[x][i])))
+                            if(isLegal(new Move(x, x, i, y, board[x][i], board[x][y])))
                                 return true;
                             else break;
                     //down
                     for(int i = y + 1; i < 8; i++)
                         if(board[x][i].name != ' ')
-                            if(isLegal(new Move(x, x, i, y, board[x][i])))
+                            if(isLegal(new Move(x, x, i, y, board[x][i], board[x][y])))
                                 return true;
                             else break;
                     //northwest
                     for(int i = x - 1, j = y - 1; i >= 0 && j >= 0; i--, j--)
                         if(board[i][j].name != ' ')
-                            if(isLegal(new Move(i, x, j, y, board[i][j])))
+                            if(isLegal(new Move(i, x, j, y, board[i][j], board[x][y])))
                                 return true;
                             else break;
                     //northeast
                     for(int i = x + 1, j = y - 1; i < 8 && j >= 0; i++, j--)
                         if(board[i][j].name != ' ')
-                            if(isLegal(new Move(i, x, j, y, board[i][j])))
+                            if(isLegal(new Move(i, x, j, y, board[i][j], board[x][y])))
                                 return true;
                             else break;
                     //southwest
                     for(int i = x - 1, j = y + 1; i >= 0 && j < 8; i--, j++)
                         if(board[i][j].name != ' ')
-                            if(isLegal(new Move(i, x, j, y, board[i][j])))
+                            if(isLegal(new Move(i, x, j, y, board[i][j], board[x][y])))
                                 return true;
                             else break;
                     //southeast
                     for(int i = x + 1, j = y + 1; i < 8 && j < 8; i++, j++)
                         if(board[i][j].name != ' ')
-                            if(isLegal(new Move(i, x, j, y, board[i][j])))
+                            if(isLegal(new Move(i, x, j, y, board[i][j], board[x][y])))
                                 return false;
                             else break;
 
