@@ -12,7 +12,7 @@ package chessai;
 public final class Board {
     //vars
     Piece[][] board = new Piece[8][8];
-    boolean[][] hasMoved = new boolean[3][2]; //rook, king, rook (0 is black, 1 is white on 2nd dimension)
+    boolean[][] hasMoved = new boolean[3][2]; //rook, king, rook (0 is white, 1 is black on 2nd dimension)
     private Move[] moves = new Move[128]; //will be used for undoing moves, needs to account for taking pieces
     int turnCount = 0;
 
@@ -170,16 +170,16 @@ public final class Board {
             case 'K':
                 //castling. if legal, only check moving through other pieces later
             	if(m.ex - m.sx == 2 && m.sy == m.ey) { //castling kingside
-                    if(m.piece.color == Color.WHITE && !hasMoved[2][1] && !hasMoved[1][1])
+                    if(m.piece.color == Color.WHITE && !hasMoved[2][0] && !hasMoved[1][0])
                         break;
-                    else if(m.piece.color == Color.BLACK && !hasMoved[2][0] && !hasMoved[1][0])
+                    else if(m.piece.color == Color.BLACK && !hasMoved[2][1] && !hasMoved[1][1])
                         break;
                     else return false;
             	}
                 else if(m.sx - m.ex == 2 && m.sy == m.ey) { //castling queenside, extra check
-                    if(m.piece.color == Color.WHITE && !hasMoved[1][1] && !hasMoved[0][1] && board[1][m.sy].name == ' ')
+                    if(m.piece.color == Color.WHITE && !hasMoved[1][0] && !hasMoved[0][0] && board[1][m.sy].name == ' ')
                         break;
-                    else if(m.piece.color == Color.BLACK && !hasMoved[1][0] && !hasMoved[0][0] && board[1][m.sy].name == ' ')
+                    else if(m.piece.color == Color.BLACK && !hasMoved[1][1] && !hasMoved[0][1] && board[1][m.sy].name == ' ')
                         break;
                     else return false;
             	}
@@ -325,7 +325,7 @@ public final class Board {
         //castling
         switch (m.piece.name) {
             case 'K':
-                hasMoved[1][(turnCount % 2 == 0 ? 0 : 1)] = true;
+                hasMoved[0][(turnCount % 2 == 0 ? 0 : 1)] = true;
                 if(m.ex - m.sx == 2) { //kingside
                     // place rook to left of king
                     swap(m.ex-1, 7, m.sy, m.sy);
@@ -336,7 +336,7 @@ public final class Board {
                 }   break;
             case 'R':
                 // if a rook is moved, set hasMoved to true to prevent castling
-                hasMoved[(m.sx == 7 ? 2 : 0)][(turnCount % 2 == 0 ? 1 : 0)] = true;
+                hasMoved[(m.sx == 7 ? 2 : 0)][(turnCount % 2 == 0 ? 0 : 1)] = true;
                 break;
             case 'P':
                 if(Math.abs(m.ex - m.sx) == 1 && Math.abs(m.ey - m.sy) == 1 && board[m.ex][m.ey].name == ' ') { // en passant
@@ -393,16 +393,16 @@ public final class Board {
             else if(m.piece.name == 'K' && m.ex - m.sx == 2){
             	System.out.println("Undo castling");
             	//swap(m.sx, m.ex, m.sy, m.ey);
-            	hasMoved[1][(turnCount % 2 == 1 ? 1 : 0)] = false;
+            	hasMoved[1][(turnCount % 2 == 1 ? 0 : 1)] = false;
             	swap(5, 7, m.sy, m.ey);
-            	hasMoved[2][(turnCount % 2 == 1 ? 1 : 0)] = false;
+            	hasMoved[2][(turnCount % 2 == 1 ? 0 : 1)] = false;
             }
             else if(m.piece.name == 'K' && m.ex - m.sx == -2){
             	System.out.println("Undo castling");
             	//swap(m.sx, m.ex, m.sy, m.ey);
-            	hasMoved[1][(turnCount % 2 == 1 ? 1 : 0)] = false;
+            	hasMoved[1][(turnCount % 2 == 1 ? 0 : 1)] = false;
             	swap(0, 3, m.sy, m.ey);
-            	hasMoved[0][(turnCount % 2 == 1 ? 1 : 0)] = false;
+            	hasMoved[0][(turnCount % 2 == 1 ? 0 : 1)] = false;
             }
             else if(m.piece.name == 'P' && (m.ey == 7 || m.ey == 0)){
 	    	board[m.ex][m.ey] = m.pieceCaptured;
