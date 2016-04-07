@@ -1,3 +1,7 @@
+/*
+    Graphical user interface for ChessAI.
+*/
+
 package chessai;
 
 import javafx.application.Application;
