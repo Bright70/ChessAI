@@ -203,66 +203,13 @@ public final class Board
         }
         
         //player's king in check
-//        for(int x = 0; x < 8; x++) {
-//            for(int y = 0; y < 8; y++) {
-//                //find the correct king
-//                if(board[x][y].name == 'K' && board[x][y].color == (turnCount % 2 == 0 ? Color.WHITE : Color.BLACK)) {
-//                        //check all possible angles of attack
-//                    //left
-//                    for(int i = x - 1; i >= 0; i--)
-//                        if(board[i][y].name != ' ')
-//                            if(isLegal(new Move(i, x, y, y, board[i][y])))
-//                                return false;
-//                            else break;
-//                    //right
-//                    for (int i = x + 1; i < 8; i++)
-//                        if(board[i][y].name != ' ')
-//                            if(isLegal(new Move(i, x, y, y, board[i][y])))
-//                                return false;
-//                            else break;
-//                    //up
-//                    for(int i = y - 1; i >= 0; i--)
-//                        if(board[x][i].name != ' ')
-//                            if(isLegal(new Move(x, x, i, y, board[x][i])))
-//                                return false;
-//                            else break;
-//                    //down
-//                    for(int i = y + 1; i < 8; i++)
-//                        if(board[x][i].name != ' ')
-//                            if(isLegal(new Move(x, x, i, y, board[x][i])))
-//                                return false;
-//                            else break;
-//                    //northwest
-//                    for(int i = x - 1, j = y - 1; i >= 0 && j >= 0; i--, j--)
-//                        if(board[i][j].name != ' ')
-//                            if(isLegal(new Move(i, x, j, y, board[i][j])))
-//                                return false;
-//                            else break;
-//                    //northeast
-//                    for(int i = x + 1, j = y - 1; i < 8 && j >= 0; i++, j--)
-//                        if(board[i][j].name != ' ')
-//                            if(isLegal(new Move(i, x, j, y, board[i][j])))
-//                                return false;
-//                            else break;
-//                    //southwest
-//                    for(int i = x - 1, j = y + 1; i >= 0 && j < 8; i--, j++)
-//                        if(board[i][j].name != ' ')
-//                            if(isLegal(new Move(i, x, j, y, board[i][j])))
-//                                return false;
-//                            else break;
-//                    //southeast
-//                    for(int i = x + 1, j = y + 1; i < 8 && j < 8; i++, j++)
-//                        if(board[i][j].name != ' ')
-//                            if(isLegal(new Move(i, x, j, y, board[i][j])))
-//                                return false;
-//                            else break;
-//                    
-//                    ///knights
-//                    
-//                    x = 8; break;
-//                }
-//            }
-//        }
+        makeMove(m);
+        if(isInCheck(turnCount % 2 == 0 ? Color.BLACK : Color.WHITE))
+        {
+            undoMove();
+            return false;
+        }
+        else undoMove();
 
         // if has not returned false before here, must be legal
         return true;
@@ -286,6 +233,71 @@ public final class Board
                     }
                     x = 8;
                     break;
+                }
+            }
+    	}
+    	return true;
+    }
+    
+    //check for king in check
+    public boolean isInCheck(Color c) {
+        //find the king
+    	for(int x = 0; x < 8; x++) {
+            for(int y = 0; y < 8; y++) {
+                if(board[x][y].name == 'K' && board[x][y].color == c){
+                        //check all possible angles of attack
+                    //left
+                    for(int i = x - 1; i >= 0; i--)
+                        if(board[i][y].name != ' ')
+                            if(isLegal(new Move(i, x, y, y, board[i][y])))
+                                return true;
+                            else break;
+                    //right
+                    for (int i = x + 1; i < 8; i++)
+                        if(board[i][y].name != ' ')
+                            if(isLegal(new Move(i, x, y, y, board[i][y])))
+                                return true;
+                            else break;
+                    //up
+                    for(int i = y - 1; i >= 0; i--)
+                        if(board[x][i].name != ' ')
+                            if(isLegal(new Move(x, x, i, y, board[x][i])))
+                                return true;
+                            else break;
+                    //down
+                    for(int i = y + 1; i < 8; i++)
+                        if(board[x][i].name != ' ')
+                            if(isLegal(new Move(x, x, i, y, board[x][i])))
+                                return true;
+                            else break;
+                    //northwest
+                    for(int i = x - 1, j = y - 1; i >= 0 && j >= 0; i--, j--)
+                        if(board[i][j].name != ' ')
+                            if(isLegal(new Move(i, x, j, y, board[i][j])))
+                                return true;
+                            else break;
+                    //northeast
+                    for(int i = x + 1, j = y - 1; i < 8 && j >= 0; i++, j--)
+                        if(board[i][j].name != ' ')
+                            if(isLegal(new Move(i, x, j, y, board[i][j])))
+                                return true;
+                            else break;
+                    //southwest
+                    for(int i = x - 1, j = y + 1; i >= 0 && j < 8; i--, j++)
+                        if(board[i][j].name != ' ')
+                            if(isLegal(new Move(i, x, j, y, board[i][j])))
+                                return true;
+                            else break;
+                    //southeast
+                    for(int i = x + 1, j = y + 1; i < 8 && j < 8; i++, j++)
+                        if(board[i][j].name != ' ')
+                            if(isLegal(new Move(i, x, j, y, board[i][j])))
+                                return false;
+                            else break;
+
+                    ///knights
+
+                    x = 8; break;
                 }
             }
     	}
