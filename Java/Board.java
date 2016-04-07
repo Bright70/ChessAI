@@ -1,6 +1,10 @@
 /*
     Board class for ChessAI.
     Contains all elements of a chess game.
+    
+    TODO:
+    Can take pieces while castling
+    Can castle with other pieces so long as bool is false
 */
 
 package chessai;
@@ -26,14 +30,11 @@ public final class Board
     public void displayBoard(Piece[][] board) {
         System.out.print("\n    a   b   c   d   e   f   g   h\n");
         
-        for(int y = 0; y < 8; y++)
-        {
+        for(int y = 0; y < 8; y++) {
             System.out.print("  ---------------------------------\n" + (8 - y) + " |"); //17
             
-            for (int x = 0; x < 8; x++)
-            {
-                switch (board[x][y].color)
-                {
+            for (int x = 0; x < 8; x++) {
+                switch (board[x][y].color) {
                     case WHITE: System.out.print("w"); break;
                     case BLACK: System.out.print("b"); break;
                     case NONE: System.out.print(" "); break;
@@ -61,21 +62,21 @@ public final class Board
         for(int x = 0; x < 2; x++) {
             if(x == 1) color = Color.WHITE;
 
-            board[0][y] = new Rook(0, y, color);
-            board[7][y] = new Rook(7, y, color);
+            board[0][y] = new Rook(color);
+            board[7][y] = new Rook(color);
 
-            board[1][y] = new Knight(1, y, color);		
-            board[6][y] = new Knight(6, y, color);
+            board[1][y] = new Knight(color);		
+            board[6][y] = new Knight(color);
 
-            board[2][y] = new Bishop(2, y, color);
-            board[5][y] = new Bishop(5, y, color);
+            board[2][y] = new Bishop(color);
+            board[5][y] = new Bishop(color);
 
-            board[3][y] = new Queen(3, y, color);
-            board[4][y] = new King(4, y, color);
+            board[3][y] = new Queen(color);
+            board[4][y] = new King(color);
             if(y == 0) y++;
             if(y == 7) y--;
             for(int a = 0; a < 8; a++){
-                board[a][y] = new Pawn(a, y, color);
+                board[a][y] = new Pawn(color);
             }
             
             y = 7;
@@ -86,6 +87,8 @@ public final class Board
     public boolean isLegal(Move m) {
 
             //initial universal checks
+    	
+    	System.out.println("Is legal starts");
         
         //type check
         if(m.piece.name == ' ') return false;
@@ -113,15 +116,21 @@ public final class Board
                 //moving up
                 switch (dy) { 
                     case 1:
-                        ///needs en passant
                         //taking pieces
                         if(Math.abs(m.sx - m.ex) == 1) {
-                            if(board[m.ex][m.ey].name == ' ')
+                        	Move lm = moves[turnCount-1]; //reference for readability
+                        	if(turnCount > 0 && lm.piece.name == 'P' 
+                        	&& Math.abs(lm.ey - lm.sy) == 2 
+                        	&& (lm.piece.color == (turnCount % 2 == 0 ? Color.BLACK : Color.WHITE))
+                        	&& lm.ex == m.ex && lm.ey == m.sy){
+                        		break;
+                        	}
+                        	else if(board[m.ex][m.ey].name == ' ')
                                 return false;
                         }
                         //single move up
                         else if (m.sx == m.ex && board[m.ex][m.ey].name == ' ')
-                            return true;
+                            break;
                         else return false;
                         break;
                     case 2: //double move forwards
@@ -168,7 +177,7 @@ public final class Board
                         break;
                     else return false;
             	}
-                else if(m.sx - m.ex == 2 && m.sy == m.ey) { //castling queenside, extra checke
+                else if(m.sx - m.ex == 2 && m.sy == m.ey) { //castling queenside, extra check
                     if(m.piece.color == Color.WHITE && !hasMoved[1][1] && !hasMoved[0][1] && board[1][m.sy].name == ' ')
                         break;
                     else if(m.piece.color == Color.BLACK && !hasMoved[1][0] && !hasMoved[0][0] && board[1][m.sy].name == ' ')
@@ -193,7 +202,67 @@ public final class Board
             } 
         }
         
-        ///king in check
+        //player's king in check
+//        for(int x = 0; x < 8; x++) {
+//            for(int y = 0; y < 8; y++) {
+//                //find the correct king
+//                if(board[x][y].name == 'K' && board[x][y].color == (turnCount % 2 == 0 ? Color.WHITE : Color.BLACK)) {
+//                        //check all possible angles of attack
+//                    //left
+//                    for(int i = x - 1; i >= 0; i--)
+//                        if(board[i][y].name != ' ')
+//                            if(isLegal(new Move(i, x, y, y, board[i][y])))
+//                                return false;
+//                            else break;
+//                    //right
+//                    for (int i = x + 1; i < 8; i++)
+//                        if(board[i][y].name != ' ')
+//                            if(isLegal(new Move(i, x, y, y, board[i][y])))
+//                                return false;
+//                            else break;
+//                    //up
+//                    for(int i = y - 1; i >= 0; i--)
+//                        if(board[x][i].name != ' ')
+//                            if(isLegal(new Move(x, x, i, y, board[x][i])))
+//                                return false;
+//                            else break;
+//                    //down
+//                    for(int i = y + 1; i < 8; i++)
+//                        if(board[x][i].name != ' ')
+//                            if(isLegal(new Move(x, x, i, y, board[x][i])))
+//                                return false;
+//                            else break;
+//                    //northwest
+//                    for(int i = x - 1, j = y - 1; i >= 0 && j >= 0; i--, j--)
+//                        if(board[i][j].name != ' ')
+//                            if(isLegal(new Move(i, x, j, y, board[i][j])))
+//                                return false;
+//                            else break;
+//                    //northeast
+//                    for(int i = x + 1, j = y - 1; i < 8 && j >= 0; i++, j--)
+//                        if(board[i][j].name != ' ')
+//                            if(isLegal(new Move(i, x, j, y, board[i][j])))
+//                                return false;
+//                            else break;
+//                    //southwest
+//                    for(int i = x - 1, j = y + 1; i >= 0 && j < 8; i--, j++)
+//                        if(board[i][j].name != ' ')
+//                            if(isLegal(new Move(i, x, j, y, board[i][j])))
+//                                return false;
+//                            else break;
+//                    //southeast
+//                    for(int i = x + 1, j = y + 1; i < 8 && j < 8; i++, j++)
+//                        if(board[i][j].name != ' ')
+//                            if(isLegal(new Move(i, x, j, y, board[i][j])))
+//                                return false;
+//                            else break;
+//                    
+//                    ///knights
+//                    
+//                    x = 8; break;
+//                }
+//            }
+//        }
 
         // if has not returned false before here, must be legal
         return true;
@@ -209,7 +278,7 @@ public final class Board
                     for(int ex = x - 1; ex < x + 2; ex++) {
                         for(int ey = y - 1; ey < y + 2; ey++) {
                             if(ex >= 0 && ex < 8 && ey >= 0 && ey < 8) { // prevents arrayOutOfBounds
-                                if(isLegal(new Move(x, y, ex, ey, board[x][y]))) {
+                                if(isLegal(new Move(x, ex, y, ey, board[x][y], board[ex][ey]))) {
                                     return false; // if any legal move is found, not checkmate
                                 }
                             }
@@ -225,24 +294,34 @@ public final class Board
     
     //make a move, hopefully after checking legality
     public void makeMove(Move m) {
-        ///currently cannot en passant
+    	//special moves
         
-        //move pieces
-        board[m.ex][m.ey] = board[m.sx][m.sy];
-        board[m.sx][m.sy] = new Empty();
-        //castling
+    	//castling
     	if(m.piece.name == 'K') {
+    		hasMoved[1][(turnCount % 2 == 0 ? 0 : 1)] = true;
             if(m.ex - m.sx == 2) { //kingside
-                board[m.ex-1][m.sy] = board[7][m.sy]; // place rook to left of king
-                board[7][m.sy] = new Empty();
+                // place rook to left of king
+                swap(m.ex-1, 7, m.sy, m.sy);
             }
             if(m.sx - m.ex == 2) { //queenside
-                board[m.ex+1][m.sy] = board[0][m.sy]; // place rook to right of king
-                board[0][m.sy] = new Empty();
+                // place rook to right of king
+                swap(m.ex+1, 0, m.sy, m.sy);
             }
     	}
+    	else if(m.piece.name == 'R'){
+    		// if a rook is moved, set hasMoved to true to prevent castling
+    		hasMoved[(m.sx == 7 ? 2 : 0)][(turnCount % 2 == 0 ? 1 : 0)] = true;
+    	}
+    	else if(m.piece.name == 'P' && Math.abs(m.ex - m.sx) == 1 && Math.abs(m.ey - m.sy) == 1
+    				&& board[m.ex][m.ey].name == ' '){ // en passant
+    		board[m.ex][m.sy] = new Empty();
+    	}
     	
-        moves[turnCount] = m; //does not store castling or capturing
+    	//move pieces
+        board[m.ex][m.ey] = board[m.sx][m.sy];
+        board[m.sx][m.sy] = new Empty();
+    	
+        moves[turnCount] = m; //does not store castling
         turnCount++;
     }
     
@@ -250,12 +329,33 @@ public final class Board
     public void undoMove() {
         //if a move has been made
         if (turnCount > 0) {
-            ///currently does not account for taking pieces
-            board[moves[turnCount-1].sx][moves[turnCount-1].sy] = 
-                    board[moves[turnCount-1].ex][moves[turnCount-1].ey];
-            board[moves[turnCount-1].ex][moves[turnCount-1].ey] = new Empty();
-            turnCount--;
+        	turnCount--;
+        	Move m = moves[turnCount];
+            board[m.sx][m.sy] = board[m.ex][m.ey];
+            board[m.ex][m.ey] = m.pieceCaptured;
+            if(m.piece.name == 'P' && m.pieceCaptured.name == ' ' && (m.ex != m.sx)){
+            	board[m.ex][m.sy] = new Pawn((turnCount % 2 == 1 ? Color.WHITE : Color.BLACK));
+            }
+            else if(m.piece.name == 'K' && m.ex - m.sx == 2){
+            	System.out.println("Undo castling");
+            	//swap(m.sx, m.ex, m.sy, m.ey);
+            	hasMoved[1][(turnCount % 2 == 1 ? 1 : 0)] = false;
+            	swap(5, 7, m.sy, m.ey);
+            	hasMoved[2][(turnCount % 2 == 1 ? 1 : 0)] = false;
+            }
+            else if(m.piece.name == 'K' && m.ex - m.sx == -2){
+            	System.out.println("Undo castling");
+            	//swap(m.sx, m.ex, m.sy, m.ey);
+            	hasMoved[1][(turnCount % 2 == 1 ? 1 : 0)] = false;
+            	swap(0, 3, m.sy, m.ey);
+            	hasMoved[0][(turnCount % 2 == 1 ? 1 : 0)] = false;
+            }
         }
     }
-
+    
+    public void swap(int sx, int ex, int sy, int ey){
+    	Piece tmp = board[sx][sy];
+    	board[sx][sy] = board[ex][ey];
+    	board[ex][ey] = tmp;
+    }
 }
