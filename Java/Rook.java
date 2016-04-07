@@ -10,14 +10,18 @@ public class Rook extends Piece
     Rook()
     {
         value = 5;
+        x = -1;
+        y = -1;
         name = 'R';
         color = Color.NONE;
     }
     
     //coordinate and color constructor
-    Rook(Color color)
+    Rook(int x, int y, Color color)
     {
         value = 5;
+        this.x = x;
+        this.y = y;
         name = 'R';
         this.color = color;
     }

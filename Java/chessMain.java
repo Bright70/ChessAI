@@ -1,8 +1,5 @@
 /*
     Temporary interface for chessAI.
-    Todo: fix castling for white.
-    isLegal is super broke, calls itself ~500000 times
-    evaluate is kind of broken, probably because it calls isLegal
  */
 
 package chessai;
@@ -34,7 +31,7 @@ public class chessMain {
             if(game.isLegal(move)) game.makeMove(move);
             else System.out.print("Illegal move.");
             
-            //System.out.print("\nComputer evaluation: " + ai.evaluate(game) + "\n");
+            System.out.print("\nComputer evaluation: " + ai.evaluate(game) + "\n");
             game.displayBoard(game.board);
             
         } while(true); //win condition
@@ -46,10 +43,6 @@ public class chessMain {
         //coordinate variables
         int sx = -1, ex, sy = -1, ey;
         
-        if(in.equals("undo")){
-        	game.undoMove();
-        }
-        
         //coordinate input
         if(in.length() == 7) {
             sx = Integer.parseInt(in.substring(0, 1));
@@ -57,9 +50,8 @@ public class chessMain {
             ex = Integer.parseInt(in.substring(4, 5));
             ey = Integer.parseInt(in.substring(6, 7));
         }
-        //chess notational input. note: 'a' = 97, 'h' = 104, '1' = 49, '8' = 56
-        else if(in.length() <= 5 && in.charAt(in.length() - 1) >= 49 && in.charAt(in.length() - 1) <= 56
-                && in.charAt(in.length() - 2) >= 97 && in.charAt(in.length() - 2) <= 104) { 
+        //chess notational input. note: 'a' = 97, 'h' = 104
+        else { 
             //remove 'take' notation: unneeded.
             in = in.replaceFirst("x", "");
 
@@ -90,7 +82,7 @@ public class chessMain {
                         for (int y = 0; y < 8; y++) {
                             if(game.board[sx][y].name == in.charAt(0) && 
                                     game.board[sx][y].color == (game.turnCount % 2 == 0 ? Color.WHITE : Color.BLACK) &&
-                                    game.isLegal(new Move(sx, ex, y, ey, game.board[sx][y], game.board[ex][ey]))) {
+                                    game.isLegal(new Move(sx, ex, y, ey, game.board[sx][y]))) {
                                 sy = y;
                                 break;
                             }
@@ -101,7 +93,7 @@ public class chessMain {
                         for (int x = 0; x < 8; x++) {
                             if(game.board[x][sy].name == in.charAt(0) && 
                                     game.board[x][sy].color == (game.turnCount % 2 == 0 ? Color.WHITE : Color.BLACK) &&
-                                    game.isLegal(new Move(x, ex, sy, ey, game.board[x][sy], game.board[ex][ey]))) {
+                                    game.isLegal(new Move(x, ex, sy, ey, game.board[x][sy]))) {
                                 sx = x;
                                 break;
                             }
@@ -113,7 +105,7 @@ public class chessMain {
                         for(int y = 0; y < 8; y++) {
                             if(game.board[x][y].name == in.charAt(0) && 
                                     game.board[x][y].color == (game.turnCount % 2 == 0 ? Color.WHITE : Color.BLACK) &&
-                                    game.isLegal(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]))) {
+                                    game.isLegal(new Move(x, ex, y, ey, game.board[x][y]))) {
                                 sx = x; sy = y;
                                 x = 8; break;
                             }
@@ -122,13 +114,10 @@ public class chessMain {
                 }
             }
         }
-        //probably illegal move
-        else return new Move();
-        
         
 //        System.out.print("\n" + sx + " " + sy + " to " + ex + " " + ey + "\n"); //debug
         
-        return new Move(sx, ex, sy, ey, (sx >= 0 && sy >= 0 ? game.board[sx][sy] : new Empty()), (ex >= 0 && ey >= 0 ? game.board[ex][ey] : new Empty()));
+        return new Move(sx, ex, sy, ey, (sx >= 0 && sy >= 0 ? game.board[sx][sy] : new Empty()));
     }
     
 }

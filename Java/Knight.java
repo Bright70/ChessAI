@@ -10,14 +10,18 @@ public class Knight extends Piece
     Knight()
     {
         value = 3;
+        x = -1;
+        y = -1;
         name = 'N';
         color = Color.NONE;
     }
     
     //coordinate and color constructor
-    Knight(Color color)
+    Knight(int x, int y, Color color)
     {
         value = 3;
+        this.x = x;
+        this.y = y;
         name = 'N';
         this.color = color;
     }
