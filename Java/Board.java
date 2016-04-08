@@ -1,6 +1,10 @@
 /*
     Board class for ChessAI.
     Contains all elements of a chess game.
+    
+    TODO:
+    Can take pieces while castling
+    Can castle with other pieces so long as bool is false
 */
 
 package chessai;
@@ -26,9 +30,9 @@ public final class Board {
     //show a console version of the board
     public void displayBoard(Piece[][] board) {
         
-        for(int x = 0; x < 2; x++)
-            for (int y = 0; y < 3; y++)
-                System.out.println((hasMoved[y][x] ? "T" : "F"));
+//        for(int x = 0; x < 2; x++) //debug
+//            for (int y = 0; y < 3; y++)
+//                System.out.println((hasMoved[y][x] ? "T" : "F"));
         
         System.out.print("\n    a   b   c   d   e   f   g   h\n");
         
@@ -90,7 +94,7 @@ public final class Board {
 
             //initial universal checks
     	
-    	System.out.println("Is legal starts");
+//        System.out.print("Legality check starting."); //debug
         
         //type check
         if(m.piece.name == ' ') return false;
@@ -393,9 +397,9 @@ public final class Board {
         
         //stop castling if any piece moves to or from the corner
         if((m.sx == 0 || m.sx == 7) && (m.sy == 0 || m.sy == 7))
-            hasMoved[(m.sx == 0 ? 0 : 2)][(m.sy == 0 ? 1 : 0)] = false;
+            hasMoved[(m.sx == 0 ? 0 : 2)][(m.sy == 0 ? 1 : 0)] = true;
         if((m.ex == 0 || m.ex == 7) && (m.ey == 0 || m.ey == 7))
-            hasMoved[(m.ex == 0 ? 0 : 2)][(m.ey == 0 ? 1 : 0)] = false;
+            hasMoved[(m.ex == 0 ? 0 : 2)][(m.ey == 0 ? 1 : 0)] = true;
     	
     	//move pieces
         board[m.ex][m.ey] = board[m.sx][m.sy];
