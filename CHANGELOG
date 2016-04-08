@@ -1,3 +1,13 @@
+------------------------------April 7th------------------------------
+
++ GUI is WIP, almost functional for basic testing
+
++ isLegal improved heavily, although issues remain with castling
+
++ undoMove function fixed and well implemented, except when castling
+
++ AI functions are WIP, and evaluating the board is partially implemented
+
 ------------------------------March 30th------------------------------
 
 ++ Project started
