@@ -1,8 +1,5 @@
 /*
     Temporary interface for chessAI.
-    Todo: fix castling for white.
-    isLegal is super broke, calls itself ~500000 times
-    evaluate is kind of broken, probably because it calls isLegal
  */
 
 package chessai;
@@ -35,7 +32,13 @@ public class chessMain {
             if(game.isLegal(move, true)) game.makeMove(move);
             else System.out.print("Illegal move.");
             
-            //System.out.print("\nComputer evaluation: " + ai.evaluate(game) + "\n");
+            System.out.print("\nComputer evaluation: " + ai.evaluate(game) + "\n");
+            game.displayBoard(game.board);
+            
+            //experimental AI stuff
+            move = ai.aiMakeMove(game);
+            game.makeMove(move);
+            
             game.displayBoard(game.board);
             
         } while(true); //win condition
