@@ -45,7 +45,9 @@ public class chessMain {
             System.out.print("\nComputer evaluation: " + ai.evaluate(game) + "\n");
             game.displayBoard(game.board);
             
-        } while(true); //win condition
+        } while(!game.checkmated()); //win condition
+        
+        System.out.print((game.turnCount % 2 == 0 ? "Black" : "White") + " wins!");
         
     }
     
