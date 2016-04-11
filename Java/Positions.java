@@ -19,4 +19,12 @@ Qe2
 Qe7
 Bf4
 Bf5
+Ng5
+Nd4
+Nf7
+Nb3
+Nd5
+Ne4
+Nb6
+Nf2
 */
