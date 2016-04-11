@@ -87,7 +87,7 @@ public final class Board {
 
             //initial universal checks
     	
-    	System.out.println("Is legal starts");
+    	//System.out.println("Is legal starts");
         
         //type check
         if(m.piece.name == ' ') return false;
@@ -386,45 +386,45 @@ public final class Board {
         //if a move has been made
         System.out.println("Undo move");
         if (turnCount > 0) {
-        	turnCount--;
-        	Move m = moves[turnCount];
+            turnCount--;
+            Move m = moves[turnCount];
             board[m.sx][m.sy] = board[m.ex][m.ey];
             board[m.ex][m.ey] = m.pieceCaptured;
             if(m.piece.name == 'P' && m.pieceCaptured.name == ' ' && (m.ex != m.sx)){
-            	board[m.ex][m.sy] = new Pawn((turnCount % 2 == 1 ? Color.WHITE : Color.BLACK));
+                board[m.ex][m.sy] = new Pawn((turnCount % 2 == 1 ? Color.WHITE : Color.BLACK));
             }
             else if(m.piece.name == 'K' && m.ex - m.sx == 2){
-            	System.out.println("Undo castling");
-            	//swap(m.sx, m.ex, m.sy, m.ey);
-            	hasMoved[1][(turnCount % 2 == 1 ? 0 : 1)] = false;
-            	swap(5, 7, m.sy, m.ey);
-            	hasMoved[2][(turnCount % 2 == 1 ? 0 : 1)] = false;
+                System.out.println("Undo castling");
+                //swap(m.sx, m.ex, m.sy, m.ey);
+                hasMoved[1][(turnCount % 2 == 1 ? 0 : 1)] = false;
+                swap(5, 7, m.sy, m.ey);
+                hasMoved[2][(turnCount % 2 == 1 ? 0 : 1)] = false;
             }
             else if(m.piece.name == 'K' && m.ex - m.sx == -2){
-            	System.out.println("Undo castling");
-            	//swap(m.sx, m.ex, m.sy, m.ey);
-            	hasMoved[1][(turnCount % 2 == 1 ? 0 : 1)] = false;
-            	swap(0, 3, m.sy, m.ey);
-            	hasMoved[0][(turnCount % 2 == 1 ? 0 : 1)] = false;
+                System.out.println("Undo castling");
+                //swap(m.sx, m.ex, m.sy, m.ey);
+                hasMoved[1][(turnCount % 2 == 1 ? 0 : 1)] = false;
+                swap(0, 3, m.sy, m.ey);
+                hasMoved[0][(turnCount % 2 == 1 ? 0 : 1)] = false;
             }
             else if(m.piece.name == 'P' && (m.ey == 7 || m.ey == 0)){
-	    	board[m.ex][m.ey] = m.pieceCaptured;
-		board[m.sx][m.sy] = new Pawn(turnCount % 2 == 0 ? Color.WHITE : Color.BLACK);
-	    }
-	    
-	    //reset bools for castling
+                board[m.ex][m.ey] = m.pieceCaptured;
+                board[m.sx][m.sy] = new Pawn(turnCount % 2 == 0 ? Color.WHITE : Color.BLACK);
+            }
+
+            //reset bools for castling
             if((m.ex == 0 || m.ex == 7) && (m.ey == 0 || m.ey == 7))
                 for(int i = 0; i <= turnCount; i++)
                     if(i == turnCount)
                         hasMoved[(m.ex == 0 ? 0 : 2)][(m.ey == 0 ? 1 : 0)] = false;
-                    else if((moves[i].ex == m.ex && moves[i].ey == m.ey) || 
+                    else if((moves[i].ex == m.ex && moves[i].ey == m.ey) ||
                             (moves[i].sx == m.ex && moves[i].sy == m.ey))
                         break;
             if((m.sx == 0 || m.sx == 7) && (m.sy == 0 || m.sy == 7))
                 for(int i = 0; i <= turnCount; i++)
                     if(i == turnCount)
                         hasMoved[(m.sx == 0 ? 0 : 2)][(m.sy == 0 ? 1 : 0)] = false;
-                    else if((moves[i].ex == m.sx && moves[i].ey == m.sy) || 
+                    else if((moves[i].ex == m.sx && moves[i].ey == m.sy) ||
                             (moves[i].sx == m.sx && moves[i].sy == m.sy))
                         break;
         }
