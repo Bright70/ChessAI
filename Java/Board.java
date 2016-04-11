@@ -120,28 +120,30 @@ public final class Board {
                     case 1:
                         //taking pieces
                         if(Math.abs(m.sx - m.ex) == 1) {
-                        	Move lm = moves[turnCount-1]; //reference for readability
-                        	if(turnCount > 0 && lm.piece.name == 'P' 
-                        	&& Math.abs(lm.ey - lm.sy) == 2 
-                        	&& (lm.piece.color == (turnCount % 2 == 0 ? Color.BLACK : Color.WHITE))
-                        	&& lm.ex == m.ex && lm.ey == m.sy){
-                        		break;
-                        	}
-                        	else if(board[m.ex][m.ey].name == ' ')
-                                return false;
+                            if(turnCount > 0) {
+                                Move lm = moves[turnCount-1]; //reference for readability
+                                if(turnCount > 0 && lm.piece.name == 'P' 
+                                        && Math.abs(lm.ey - lm.sy) == 2 
+                                        && (lm.piece.color == (turnCount % 2 == 0 ? Color.BLACK : Color.WHITE))
+                                        && lm.ex == m.ex && lm.ey == m.sy){
+                                    break;
+                                }
+                                else if(board[m.ex][m.ey].name == ' ')
+                                    return false;
+                            }
+                            else return false;
                         }
                         //single move up
                         else if (m.sx == m.ex && board[m.ex][m.ey].name == ' ')
                             break;
                         else return false;
-                        break;
                     case 2: //double move forwards
                         //check for in initial position
-                        if(!((turnCount % 2 == 0 && m.sy == 6) || (turnCount % 2 == 1 && m.sy == 1))
-                                || board[m.ex][m.ey].name != ' ')
-                            return false;
-                        break;
-                    default: return false; //any greater magnitude of dy is illegal
+                        if(m.sy == (turnCount % 2 == 0 ? 6 : 1) && m.sx == m.ex
+                                && board[m.ex][m.ey].name == ' ')
+                            break;
+                        else return false;
+                    default: return false; //any other magnitude of dy is illegal
                 }
                 break;
             //rook
