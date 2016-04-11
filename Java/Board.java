@@ -411,6 +411,22 @@ public final class Board {
 	    	board[m.ex][m.ey] = m.pieceCaptured;
 		board[m.sx][m.sy] = new Pawn(turnCount % 2 == 0 ? Color.WHITE : Color.BLACK);
 	    }
+	    
+	    //reset bools for castling
+            if((m.ex == 0 || m.ex == 7) && (m.ey == 0 || m.ey == 7))
+                for(int i = 0; i <= turnCount; i++)
+                    if(i == turnCount)
+                        hasMoved[(m.ex == 0 ? 0 : 2)][(m.ey == 0 ? 1 : 0)] = false;
+                    else if((moves[i].ex == m.ex && moves[i].ey == m.ey) || 
+                            (moves[i].sx == m.ex && moves[i].sy == m.ey))
+                        break;
+            if((m.sx == 0 || m.sx == 7) && (m.sy == 0 || m.sy == 7))
+                for(int i = 0; i <= turnCount; i++)
+                    if(i == turnCount)
+                        hasMoved[(m.sx == 0 ? 0 : 2)][(m.sy == 0 ? 1 : 0)] = false;
+                    else if((moves[i].ex == m.sx && moves[i].ey == m.sy) || 
+                            (moves[i].sx == m.sx && moves[i].sy == m.sy))
+                        break;
         }
     }
     
