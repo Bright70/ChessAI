@@ -78,9 +78,70 @@ public class ChessAI {
 
     //choose a move by evaulating multiple positions
     public Move aiMakeMove(Board game) {
-        evaluate(game);
+        //vars
+        double eval; int possibleMoves = 0;
+        Move[] moves = new Move[64];
+        double[] scores = new double[64];
         
-        return new Move();
+        //get current score
+        eval = evaluate(game);
+        
+        //get and evaluate all possible moves
+        for(int x = 0; x < 8; x++) {
+            for(int y = 0; y < 8; y++) {
+                if(game.board[x][y].name != ' ')
+                {
+                    for(int ex = 0; ex < 8; ex++) {
+                        for(int ey = 0; ey < 8; ey++) {
+                            if(game.isLegal(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]), true)) {
+                                moves[possibleMoves] = new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]);
+                                game.makeMove(moves[possibleMoves]);
+                                scores[possibleMoves] = evaluate(game);
+                                game.undoMove();
+                                possibleMoves++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        //quicksort moves based on score
+        quickSort(scores, moves, 0, possibleMoves);
+        
+        return moves[possibleMoves];
+    }
+    
+    //quicksort moves for aiMakeMove. last move should be the best
+    public void quickSort(double[] scores, Move[] moves, int left, int right)
+    {
+        double temp; Move mTemp;
+        double pivot = scores[(int)((left + right) / 2)];
+        int i = left, j = right;
+        
+        while (i <= j)
+        {
+            while (scores[i] < pivot)
+                i++;
+            while (scores[j] > pivot)
+                j--;
+            if (i <= j)
+            {
+                temp = scores[i];
+                scores[i] = scores[j];
+                scores[j] = temp;
+                mTemp = moves[i];
+                moves[i] = moves[j];
+                moves[j] = mTemp;
+                i++;
+                j--;
+            }
+        }
+        
+        if (left < j)
+            quickSort(scores, moves, left, j);
+        if (i < right)
+            quickSort(scores, moves, i, right);
     }
     
 }
