@@ -106,13 +106,18 @@ public class ChessAI {
             }
         }
         
-        //quicksort moves based on score
-        quickSort(scores, moves, 0, possibleMoves);
+        Move[] nMoves = new Move[possibleMoves];
+        System.arraycopy(moves, 0, nMoves, 0, possibleMoves);
+        double[] nScores = new double[possibleMoves];
+        System.arraycopy(scores, 0, nScores, 0, possibleMoves);
         
-        return moves[possibleMoves];
+        //quicksort moves based on score
+        quickSort(nScores, nMoves, 0, possibleMoves - 1);
+        
+        return nMoves[(game.turnCount % 2 == 0 ? possibleMoves : 0)];
     }
     
-    //quicksort moves for aiMakeMove. last move should be the best
+    //quicksort moves for aiMakeMove. last move should be the best for White
     public void quickSort(double[] scores, Move[] moves, int left, int right)
     {
         double temp; Move mTemp;
