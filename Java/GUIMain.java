@@ -31,7 +31,6 @@ class BoardUI{ // only for visual representation of Board class
         square.setOnDragOver(event -> {
             if (event.getGestureSource() != square &&
                     event.getDragboard().hasImage()) {
-        /* allow for both copying and moving, whatever user chooses */
                 event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
             }
 
@@ -123,6 +122,58 @@ public class GUIMain extends Application implements EventHandler<ActionEvent>{
         button.setLayoutY(y);
     }
 
+    private void setDragEvents(int x, int y){
+        final int X = x, Y = y;
+        boardUI[x][y].pieceView.setOnDragOver(event -> {
+            if (event.getGestureSource() != boardUI[X][Y].pieceView &&
+                    event.getDragboard().hasImage()) {
+                event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+            }
+
+            event.consume();
+        });
+        boardUI[x][y].pieceView.setOnDragDetected(event -> { // lambda :D
+            sx = (int)((event.getSceneX() - 75) /75);
+            sy = (int)((event.getSceneY() - 75) /75);
+            System.out.println("sx: " + sx + " sy: " + sy);
+
+            Dragboard db = boardUI[X][Y].pieceView.startDragAndDrop(TransferMode.ANY);
+
+            ClipboardContent content = new ClipboardContent();
+            content.putImage(boardUI[X][Y].piece);
+            db.setContent(content);
+            updateBoard();
+
+            event.consume();
+        });
+        boardUI[x][y].pieceView.setOnDragDone(event -> {
+            updateBoard();
+            event.consume();
+        });
+        boardUI[x][y].square.setOnDragDropped(event -> {
+            Dragboard db = event.getDragboard();
+            boolean success = false;
+            if(db.hasImage()) {
+                success = true;
+                ex = (int) ((event.getSceneX() - 75) / 75);
+                ey = (int) ((event.getSceneY() - 75) / 75);
+                System.out.println("ex: " + ex);
+                System.out.println("ey: " + ey);
+                Move move = new Move(sx, ex, sy, ey, board.board[sx][sy], board.board[sx][ey]);
+                if (board.isLegal(move, true)){
+                    board.makeMove(move);
+                    System.out.println("Move is legal");
+                }
+                else
+                    System.out.println("Move is illegal");
+                // have to actually move the pieces, without static references
+            }
+
+            event.setDropCompleted(success);
+            event.consume();
+        });
+    }
+
     private void updateBoard(){
         for(int x = 0; x < 8; x++){
             for(int y = 0; y < 8; y++){
@@ -134,25 +185,7 @@ public class GUIMain extends Application implements EventHandler<ActionEvent>{
                 if(boardUI[x][y].piece != null){ // could probably be simplified
                     boardUI[x][y].pieceView.relocate(offset + x*75, offset + y*75);
                     layout.getChildren().add(boardUI[x][y].pieceView);
-                    final int X = x, Y = y;
-                    boardUI[x][y].pieceView.setOnDragDetected(event -> { // lambda :D
-                        sx = (int)((event.getSceneX() - 75) /75);
-                        sy = (int)((event.getSceneY() - 75) /75);
-                        System.out.println("sx: " + sx + " sy: " + sy);
-
-                        Dragboard db = boardUI[X][Y].pieceView.startDragAndDrop(TransferMode.ANY);
-
-                        ClipboardContent content = new ClipboardContent();
-                        content.putImage(boardUI[X][Y].piece);
-                        db.setContent(content);
-                        updateBoard();
-
-                        event.consume();
-                    });
-                    boardUI[x][y].pieceView.setOnDragDone(event -> {
-                        updateBoard();
-                        event.consume();
-                    });
+                    setDragEvents(x, y);
                 }
             }
         }
@@ -167,30 +200,7 @@ public class GUIMain extends Application implements EventHandler<ActionEvent>{
                 boardUI[x][y] = new BoardUI(x, y);
                 boardUI[x][y].square.relocate(offset + x*75, offset + y*75);
                 layout.getChildren().add(boardUI[x][y].square);
-                boardUI[x][y].square.setOnDragDropped(event -> {
-                    Dragboard db = event.getDragboard();
-                    boolean success = false;
-                    if(db.hasImage()) {
-                        success = true;
-                        ex = (int) ((event.getSceneX() - 75) / 75);
-                        ey = (int) ((event.getSceneY() - 75) / 75);
-                        System.out.println(sx);
-                        System.out.println(sy);
-                        System.out.println(ex);
-                        System.out.println(ey);
-                        Move move = new Move(sx, ex, sy, ey, board.board[sx][sy], board.board[sx][ey]);
-                        if (board.isLegal(move, true)){
-                            board.makeMove(move);
-                            System.out.println("Move is legal");
-                        }
-                        else
-                            System.out.println("Move is illegal");
-                        // have to actually move the pieces, without static references
-                    }
-
-                    event.setDropCompleted(success);
-                    event.consume();
-                });
+                setDragEvents(x, y);
             }
         }
 
@@ -208,6 +218,7 @@ public class GUIMain extends Application implements EventHandler<ActionEvent>{
     public void handle(ActionEvent event) {
         if(event.getSource() == undo){
             board.undoMove();
+            updateBoard();
         }
     }
 }
