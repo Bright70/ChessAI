@@ -20,47 +20,56 @@ public class ChessAI {
     }
     
     //evaluate position, return score
-    public double evaluate(Board board) {
+    public double evaluate(Board game) {
         double score = 0; //positive means advantage for white
         
         //compare piece values, considering mobility
         double[] pieceValues = new double[2]; //0 = white, 1 = black
-        int legalMoves = 0, turnCount = board.turnCount;
-        double bonus;
+        int turnCount = game.turnCount;
+        double bonus, legalMoves;
         Piece p;
         for(int x = 0; x < 8; x++) {
             for(int y = 0; y < 8; y++) {
                 legalMoves = 0;
-                //reference for better readability
-                p = board.board[x][y];
                 
-                if(p.name != ' ') {
-                	// should eventually optimize for individual pieces
+                //for each piece
+                if(game.board[x][y].name != ' ') {
+                    //reference for better readability
+                    p = game.board[x][y];
+                    
+                    //change turns to check legality
+                    if(game.turnCount % 2 != (p.color == Color.WHITE ? 0 : 1))
+                                game.turnCount++;
+                    
+                	//should eventually optimize for individual pieces
+                    //find all legal moves
                     for(int ex = 0; ex < 8; ex++) {
                         for(int ey = 0; ey < 8; ey++) {
-                            if(board.turnCount % 2 != (p.color == Color.WHITE ? 0 : 1))
-                                board.turnCount++; //change turns to check legality
-                            if(board.isLegal(new Move(x, y, ex, ey, p, new Empty()), true))
+                            
+                            if(game.isLegal(new Move(x, ex, y, ey, p, game.board[ex][ey]), false))
                                 legalMoves++;
-                            board.turnCount = turnCount;
                         }
                     }
+                    
+                    //reset turnCount
+                    game.turnCount = turnCount;
+                    
                     //calculate mobility bonuses
                     switch(p.name) {
-                        case 'P': bonus = Math.pow(legalMoves / 3 - 1, 3) + 1.5; break;
-                        case 'N': bonus = Math.pow(legalMoves / 4 - 1, 3) + 1.2; break;
-                        case 'B': bonus = Math.pow(legalMoves / 8 - 0.8, 3) + 1; break;
-                        case 'R': bonus = Math.pow(legalMoves / 12 - 1, 3) + 1.5; break;
-                        case 'Q': bonus = Math.pow(legalMoves / 12 - 1, 3) + 1.1; break;
-                        case 'K': bonus = Math.pow(legalMoves / 5 - 0.8, 3) + 1.1; break;
+                        case 'P': bonus = Math.pow(legalMoves / 4.6 - 0.6, 3) + 1; break;
+                        case 'N': bonus = Math.pow(legalMoves / 6.4 - 0.55, 3) + 1; break;
+                        case 'B': bonus = Math.pow(legalMoves / 11.3 - 0.58, 3) + 1; break;
+                        case 'R': bonus = Math.pow(legalMoves / 12.6 - 0.6, 3) + 1; break;
+                        case 'Q': bonus = Math.pow(legalMoves / 22.3 - 0.56, 3) + 1; break;
+                        case 'K': bonus = Math.pow(legalMoves / 8.2 - 0.4, 3) + 1; break;
                         default: bonus = 0; break;
                     }
-                    
                     pieceValues[(p.color == Color.WHITE ? 0 : 1)] += p.value * bonus;
                 }
             }
         }
-        score += pieceValues[0] - pieceValues[1];
+        //add to weighted score
+        score += (pieceValues[0] - pieceValues[1]) * 0.2;
         
         //check other stuff
         
@@ -68,8 +77,8 @@ public class ChessAI {
     }
 
     //choose a move by evaulating multiple positions
-    public Move aiMakeMove(Board board) {
-        evaluate(board);
+    public Move aiMakeMove(Board game) {
+        evaluate(game);
         
         return new Move();
     }
