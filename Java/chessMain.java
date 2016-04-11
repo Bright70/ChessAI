@@ -32,7 +32,7 @@ public class chessMain {
             
             Move move = convertMove(input, game);
             
-            if(game.isLegal(move)) game.makeMove(move);
+            if(game.isLegal(move, true)) game.makeMove(move);
             else System.out.print("Illegal move.");
             
             //System.out.print("\nComputer evaluation: " + ai.evaluate(game) + "\n");
@@ -91,7 +91,7 @@ public class chessMain {
                         for (int y = 0; y < 8; y++) {
                             if(game.board[sx][y].name == in.charAt(0) && 
                                     game.board[sx][y].color == (game.turnCount % 2 == 0 ? Color.WHITE : Color.BLACK) &&
-                                    game.isLegal(new Move(sx, ex, y, ey, game.board[sx][y], game.board[ex][ey]))) {
+                                    game.isLegal(new Move(sx, ex, y, ey, game.board[sx][y], game.board[ex][ey]), true)) {
                                 sy = y;
                                 break;
                             }
@@ -102,7 +102,7 @@ public class chessMain {
                         for (int x = 0; x < 8; x++) {
                             if(game.board[x][sy].name == in.charAt(0) && 
                                     game.board[x][sy].color == (game.turnCount % 2 == 0 ? Color.WHITE : Color.BLACK) &&
-                                    game.isLegal(new Move(x, ex, sy, ey, game.board[x][sy], game.board[ex][ey]))) {
+                                    game.isLegal(new Move(x, ex, sy, ey, game.board[x][sy], game.board[ex][ey]), true)) {
                                 sx = x;
                                 break;
                             }
@@ -114,7 +114,7 @@ public class chessMain {
                         for(int y = 0; y < 8; y++) {
                             if(game.board[x][y].name == in.charAt(0) && 
                                     game.board[x][y].color == (game.turnCount % 2 == 0 ? Color.WHITE : Color.BLACK) &&
-                                    game.isLegal(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]))) {
+                                    game.isLegal(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]), true)) {
                                 sx = x; sy = y;
                                 x = 8; break;
                             }
