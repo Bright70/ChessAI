@@ -1,5 +1,9 @@
 package chessai;
 
+/*
+ Graphical User Interface for game
+ */
+
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
