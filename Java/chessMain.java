@@ -41,13 +41,13 @@ public class chessMain {
             //experimental AI stuff
             move = ai.aiMakeMove(game);
             game.makeMove(move);
-            
+
             System.out.print("\nComputer evaluation: " + ai.evaluate(game) + "\n");
             game.displayBoard(game.board);
             
-        } while(!game.checkmated()); //win condition
+        } while(true); //win condition
         
-        System.out.print((game.turnCount % 2 == 0 ? "Black" : "White") + " wins!");
+//        System.out.print((game.turnCount % 2 == 0 ? "Black" : "White") + " wins!");
         
     }
     
