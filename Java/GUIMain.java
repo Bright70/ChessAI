@@ -2,19 +2,26 @@ package chessai;
 
 /*
  Graphical User Interface for game
+ TODO: EXPORT/IMPORT | PAWNS CANT TAKE | DISPLAY CHECK WHEN IN CHECK
  */
 
 import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
+import javax.swing.*;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 
 class BoardUI{ // only for visual representation of Board class
 
@@ -32,7 +39,7 @@ class BoardUI{ // only for visual representation of Board class
             square = new ImageView(new Image("/media/squareBlack.png"));
         }
     }
-    public void updateBoard(Piece[][] board){ // calls for pieces to be set according to board in Board class
+    void updateBoard(Piece[][] board){ // calls for pieces to be set according to board in Board class
         if(board[x][y].name == 'P'){
             if(board[x][y].color == Color.WHITE){
                 piece = new Image("/media/pawnWhite.png");
@@ -96,7 +103,7 @@ class BoardUI{ // only for visual representation of Board class
     }
 }
 
-public class GUIMain extends Application implements EventHandler<ActionEvent>{
+public class GUIMain extends Application{
 
     private Board board = new Board();
     private ChessAI ai = new ChessAI();
@@ -107,14 +114,7 @@ public class GUIMain extends Application implements EventHandler<ActionEvent>{
 
     private BoardUI[][] boardUI = new BoardUI[8][8];
 
-    public static void main(String args[]){
-        launch(args);
-    }
-
-    private void setCoords(double x, double y, Button button){
-        button.setLayoutX(x);
-        button.setLayoutY(y);
-    }
+    public static void main(String args[]){launch(args);}
 
     private void setDragEvents(int x, int y, boolean square){
         final int X = x, Y = y;
@@ -235,29 +235,132 @@ public class GUIMain extends Application implements EventHandler<ActionEvent>{
         updateBoard();
 
         MenuBar menuBar = new MenuBar();
-        Menu gameMenu = new Menu("Game");
+        Menu gameMenu = new Menu("_Game");
+        Menu boardMenu = new Menu("_Board");
         MenuItem newGameMenu = new MenuItem("New Game");
-        gameMenu.getItems().add(new SeparatorMenuItem());
+        newGameMenu.setOnAction(event -> {board = new Board(); updateBoard();});
         MenuItem undoMenu = new MenuItem("Undo");
-        gameMenu.getItems().add(new SeparatorMenuItem());
+        undoMenu.setOnAction(event -> {board.undoMove(); updateBoard();});
         MenuItem exportMenu = new MenuItem("Export");
+        exportMenu.setOnAction(event -> exportBoard());
         MenuItem importMenu = new MenuItem("Import");
+        importMenu.setOnAction(event -> {importBoard(); updateBoard();});
 
-        gameMenu.getItems().addAll(
-                gameMenu, new SeparatorMenuItem(), undoMenu, new SeparatorMenuItem(), exportMenu, importMenu);
+        gameMenu.getItems().addAll(newGameMenu, new SeparatorMenuItem(), undoMenu);
+        boardMenu.getItems().addAll(exportMenu, importMenu);
 
-        menuBar.getMenus().add(gameMenu);
+        menuBar.getMenus().addAll(gameMenu, boardMenu);
 
         layout.setTop(menuBar);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
 
-    @Override
-    public void handle(ActionEvent event) {
-        if(event.getSource() == null){
-            board.undoMove();
-            updateBoard();
+    private void exportBoard(){
+
+        PrintWriter writer = null;
+        String input = JOptionPane.showInputDialog(this, "Enter name to store board as:");
+
+        // writing board
+        try {
+            writer = new PrintWriter("src/exports/" + input, "UTF-8"); // add file extension?
+        } catch (FileNotFoundException | UnsupportedEncodingException e) {
+            e.printStackTrace();
         }
+
+        for(int y = 0; y < 8; y++){
+            for(int x = 0; x < 8; x++){
+                if(board.board[x][y].color == Color.BLACK)
+                    writer.print("b");
+                else if(board.board[x][y].color == Color.NONE)
+                    writer.print(" ");
+                else
+                    writer.print("w");
+                writer.print(board.board[x][y].name);
+
+            }
+            writer.println();
+        }
+
+        writer.close();
+
+        // writing moves from moves array, not working
+        try {
+            writer = new PrintWriter("src/exports/" + input + "Moves", "UTF-8");
+        } catch (FileNotFoundException | UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        writer.println(board.turnCount); // print turn count to beginning of moves file
+
+        for(int x = 0; x < 128; x++){ // same as moves[] may change
+
+            if(board.moves[x] == null)
+                break; // whenever this is null, end of moves recorded reached
+            else{
+                writer.println(
+                        board.moves[x].sx + board.moves[x].ex + board.moves[x].sy + board.moves[x].ey
+                        + board.moves[x].piece.name + board.moves[x].pieceCaptured.name);
+            }
+        }
+
+        writer.close();
+
+        System.out.println("Board exported to file");
+    }
+
+    private void importBoard(){
+
+        String input = JOptionPane.showInputDialog(this, "Enter board to import:");
+
+        List<String> lines = null;
+        try {
+            lines = Files.readAllLines(Paths.get("src/exports/" + input), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            System.out.println("No such file exists");
+            // error trap
+        }
+
+        for(int x = 1; x < lines.size(); x++){ // start at one since 0 is turncount
+            for(int y = 1; y < 15; y+=2){
+                switch(lines.get(x).charAt(y)) {
+                    default:
+                        board.board[y / 2][x] = new Empty();
+                        break;
+                    case 'P':
+                        board.board[y / 2][x] = new Pawn((lines.get(x).charAt(y - 1) == 'b' ? Color.BLACK : Color.WHITE));
+                        break;
+                    case 'R':
+                        board.board[y / 2][x] = new Rook((lines.get(x).charAt(y - 1) == 'b' ? Color.BLACK : Color.WHITE));
+                        break;
+                    case 'N':
+                        board.board[y / 2][x] = new Knight((lines.get(x).charAt(y - 1) == 'b' ? Color.BLACK : Color.WHITE));
+                        break;
+                    case 'B':
+                        board.board[y / 2][x] = new Bishop((lines.get(x).charAt(y - 1) == 'b' ? Color.BLACK : Color.WHITE));
+                        break;
+                    case 'Q':
+                        board.board[y / 2][x] = new Queen((lines.get(x).charAt(y - 1) == 'b' ? Color.BLACK : Color.WHITE));
+                        break;
+                    case 'K':
+                        board.board[y / 2][x] = new King((lines.get(x).charAt(y - 1) == 'b' ? Color.BLACK : Color.WHITE));
+                        break;
+                }
+            }
+        }
+
+        // moves array must be imported
+        // turnCount must also be imported
+
+        try {
+            lines = Files.readAllLines(Paths.get("src/exports/" + input + "Moves"), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            System.out.println("No such file exists");
+            // error trap
+        }
+
+        board.turnCount = lines.get(0).charAt(0);
+
+        System.out.println("Board imported");
     }
 }

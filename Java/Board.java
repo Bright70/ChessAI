@@ -11,7 +11,7 @@ public final class Board {
     //rook, king, rook (0 is white, 1 is black on 2nd dimension)    
     boolean[][] hasMoved = new boolean[3][2]; 
     //used for undoing moves
-    private Move[] moves = new Move[128];
+    public Move[] moves = new Move[128]; // for importing/exporting boards
     int turnCount = 0;
 
     //default constructor
