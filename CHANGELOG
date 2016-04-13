@@ -1,4 +1,12 @@
-------------------------------April 7th------------------------------
+------------------------------April 12th------------------------------
+
++ Import/Export partially functional on GUI (missing importing and exporting moves array)
+
++ AI eval works at times, still WIP but should always work
+
++ AI makes move (with no branching, just looking at depth 1 for now)
+
+------------------------------April 7th-------------------------------
 
 + GUI is WIP, almost functional for basic testing
 
