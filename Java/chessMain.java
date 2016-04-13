@@ -1,5 +1,6 @@
 /*
     Temporary interface for chessAI.
+    TODO: TAKING WITH PAWNS APPARENTLY DOES NOT WORK
  */
 
 package chessai;

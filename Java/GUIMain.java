@@ -8,17 +8,17 @@ import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 
 class BoardUI{ // only for visual representation of Board class
 
-    ImageView square;
-    ImageView pieceView;
+    ImageView square, pieceView;
     Image piece; // for drag/drop
     private int x, y;
 
@@ -31,15 +31,6 @@ class BoardUI{ // only for visual representation of Board class
         else{
             square = new ImageView(new Image("/media/squareBlack.png"));
         }
-
-        square.setOnDragOver(event -> {
-            if (event.getGestureSource() != square &&
-                    event.getDragboard().hasImage()) {
-                event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
-            }
-
-            event.consume();
-        });
     }
     public void updateBoard(Piece[][] board){ // calls for pieces to be set according to board in Board class
         if(board[x][y].name == 'P'){
@@ -110,9 +101,8 @@ public class GUIMain extends Application implements EventHandler<ActionEvent>{
     private Board board = new Board();
     private ChessAI ai = new ChessAI();
     private int width = 800, height = 800, offset = 75;
-    private Pane layout = new Pane();
+    private BorderPane layout = new BorderPane();
     private Scene scene = new Scene(layout, width, height);
-    private Button undo = new Button("Undo");
     private int sx, sy, ex, ey;
 
     private BoardUI[][] boardUI = new BoardUI[8][8];
@@ -126,34 +116,8 @@ public class GUIMain extends Application implements EventHandler<ActionEvent>{
         button.setLayoutY(y);
     }
 
-    private void setDragEvents(int x, int y){
+    private void setDragEvents(int x, int y, boolean square){
         final int X = x, Y = y;
-        boardUI[x][y].pieceView.setOnDragOver(event -> {
-            if (event.getGestureSource() != boardUI[X][Y].pieceView &&
-                    event.getDragboard().hasImage()) {
-                event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
-            }
-
-            event.consume();
-        });
-        boardUI[x][y].pieceView.setOnDragDetected(event -> { // lambda :D
-            sx = (int)((event.getSceneX() - 75) /75);
-            sy = (int)((event.getSceneY() - 75) /75);
-            System.out.println("sx: " + sx + " sy: " + sy);
-
-            Dragboard db = boardUI[X][Y].pieceView.startDragAndDrop(TransferMode.ANY);
-
-            ClipboardContent content = new ClipboardContent();
-            content.putImage(boardUI[X][Y].piece);
-            db.setContent(content);
-            updateBoard();
-
-            event.consume();
-        });
-        boardUI[x][y].pieceView.setOnDragDone(event -> {
-            updateBoard();
-            event.consume();
-        });
         boardUI[x][y].square.setOnDragDropped(event -> {
             Dragboard db = event.getDragboard();
             boolean success = false;
@@ -176,6 +140,66 @@ public class GUIMain extends Application implements EventHandler<ActionEvent>{
             event.setDropCompleted(success);
             event.consume();
         });
+        boardUI[x][y].square.setOnDragOver(event -> {
+            if (event.getGestureSource() != boardUI[X][Y].square &&
+                    event.getDragboard().hasImage()) {
+                event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+            }
+
+            event.consume();
+        });
+
+        if(!square){
+            boardUI[x][y].pieceView.setOnDragDropped(event -> {
+                Dragboard db = event.getDragboard();
+                boolean success = false;
+                if(db.hasImage()) {
+                    success = true;
+                    ex = (int) ((event.getSceneX() - 75) / 75);
+                    ey = (int) ((event.getSceneY() - 75) / 75);
+                    System.out.println("ex: " + ex);
+                    System.out.println("ey: " + ey);
+                    Move move = new Move(sx, ex, sy, ey, board.board[sx][sy], board.board[sx][ey]);
+                    if (board.isLegal(move, true)){
+                        board.makeMove(move);
+                        System.out.println("Move is legal");
+                    }
+                    else
+                        System.out.println("Move is illegal");
+                    // have to actually move the pieces, without static references
+                }
+
+                event.setDropCompleted(success);
+                event.consume();
+            });
+            boardUI[x][y].pieceView.setOnDragOver(event -> {
+                if (event.getGestureSource() != boardUI[X][Y].pieceView &&
+                        event.getDragboard().hasImage()) {
+                    event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+                }
+
+                event.consume();
+            });
+            boardUI[x][y].pieceView.setOnDragDetected(event -> { // lambda :D
+                sx = (int)((event.getSceneX() - 75) /75);
+                sy = (int)((event.getSceneY() - 75) /75);
+                System.out.println("sx: " + sx + " sy: " + sy);
+
+                Dragboard db = boardUI[X][Y].pieceView.startDragAndDrop(TransferMode.ANY);
+
+                ClipboardContent content = new ClipboardContent();
+                content.putImage(boardUI[X][Y].piece);
+                db.setContent(content);
+                updateBoard();
+
+                event.consume();
+            });
+            boardUI[x][y].pieceView.setOnDragDone(event -> {
+                updateBoard();
+                event.consume();
+            });
+
+        }
     }
 
     private void updateBoard(){
@@ -189,7 +213,7 @@ public class GUIMain extends Application implements EventHandler<ActionEvent>{
                 if(boardUI[x][y].piece != null){ // could probably be simplified
                     boardUI[x][y].pieceView.relocate(offset + x*75, offset + y*75);
                     layout.getChildren().add(boardUI[x][y].pieceView);
-                    setDragEvents(x, y);
+                    setDragEvents(x, y, false);
                 }
             }
         }
@@ -204,23 +228,34 @@ public class GUIMain extends Application implements EventHandler<ActionEvent>{
                 boardUI[x][y] = new BoardUI(x, y);
                 boardUI[x][y].square.relocate(offset + x*75, offset + y*75);
                 layout.getChildren().add(boardUI[x][y].square);
-                setDragEvents(x, y);
+                setDragEvents(x, y, true);
             }
         }
 
         updateBoard();
 
-        undo.setOnAction(this);
-        setCoords(width/2, 0, undo);
+        MenuBar menuBar = new MenuBar();
+        Menu gameMenu = new Menu("Game");
+        MenuItem newGameMenu = new MenuItem("New Game");
+        gameMenu.getItems().add(new SeparatorMenuItem());
+        MenuItem undoMenu = new MenuItem("Undo");
+        gameMenu.getItems().add(new SeparatorMenuItem());
+        MenuItem exportMenu = new MenuItem("Export");
+        MenuItem importMenu = new MenuItem("Import");
 
-        layout.getChildren().add(undo);
+        gameMenu.getItems().addAll(
+                gameMenu, new SeparatorMenuItem(), undoMenu, new SeparatorMenuItem(), exportMenu, importMenu);
+
+        menuBar.getMenus().add(gameMenu);
+
+        layout.setTop(menuBar);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
 
     @Override
     public void handle(ActionEvent event) {
-        if(event.getSource() == undo){
+        if(event.getSource() == null){
             board.undoMove();
             updateBoard();
         }

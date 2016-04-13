@@ -148,5 +148,4 @@ public class ChessAI {
         if (i < right)
             quickSort(scores, moves, i, right);
     }
-    
 }
