@@ -10,8 +10,8 @@ public final class Board {
     Piece[][] board = new Piece[8][8];
     //rook, king, rook (0 is white, 1 is black on 2nd dimension)    
     boolean[][] hasMoved = new boolean[3][2]; 
-    //used for undoing moves
-    public Move[] moves = new Move[128]; // for importing/exporting boards
+    //used for undoing moves and importing/exporting
+    public Move[] moves = new Move[128];
     int turnCount = 0;
 
     //default constructor
@@ -122,14 +122,15 @@ public final class Board {
                         if(Math.abs(m.sx - m.ex) == 1) {
                             if(turnCount > 0) {
                                 Move lm = moves[turnCount-1]; //reference for readability
-                                if(turnCount > 0 && lm.piece.name == 'P' 
-                                        && Math.abs(lm.ey - lm.sy) == 2 
-                                        && (lm.piece.color == (turnCount % 2 == 0 ? Color.BLACK : Color.WHITE))
-                                        && lm.ex == m.ex && lm.ey == m.sy){
+                                if(board[m.ex][m.ey].color == 
+                                        (turnCount % 2 == 0 ? Color.BLACK : Color.WHITE))
                                     break;
-                                }
-                                else if(board[m.ex][m.ey].name == ' ')
-                                    return false;
+                                //en passant
+                                else if(lm.piece.name == 'P' && Math.abs(lm.ey - lm.sy) == 2 
+                                        && (lm.piece.color == (turnCount % 2 == 0 ? Color.BLACK : Color.WHITE))
+                                        && lm.ex == m.ex && lm.ey == m.sy)
+                                    break;
+                                else return false;
                             }
                             else return false;
                         }
@@ -211,7 +212,7 @@ public final class Board {
             } 
         }
         
-        //player's king in check
+        //player's king in check, bool to prevent infinite recursion
         if(checkingCheck) {
             makeMove(m);
             if(isInCheck(turnCount % 2 == 0 ? Color.BLACK : Color.WHITE)) {
@@ -231,6 +232,7 @@ public final class Board {
     	for(int x = 0; x < 8; x++) {
             for(int y = 0; y < 8; y++) {
                 if(board[x][y].name == 'K' && 
+                        isInCheck(turnCount % 2 == 0 ? Color.WHITE : Color.BLACK) &&
                         board[x][y].color == (turnCount % 2 == 0 ? Color.WHITE : Color.BLACK)){
                     // check 3x3 square surrounding king to see if any legal moves remain
                     for(int ex = x - 1; ex < x + 2; ex++) {
