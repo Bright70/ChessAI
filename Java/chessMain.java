@@ -36,6 +36,7 @@ public class chessMain {
                 game.displayBoard(game.board);
 
                 //experimental AI stuff
+                System.out.print("Computer is thinking...");
                 move = ai.aiMakeMove(game);
                 game.makeMove(move);
 
