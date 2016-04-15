@@ -80,6 +80,17 @@ public class ChessAI {
     public double branch(int branches, Board game) {
         double score = evaluate(game);
         
+        //lambda for next block, similar to aiMakeMove
+//        java.util.function.BiFunction<Move, Integer, Boolean> operateMove = (m, i) -> {
+//            if(game.isLegal(m, true)) {
+//                game.makeMove(m);
+//                double temp = branch(i - 1, game);
+//                game.undoMove();
+//                return true;
+//            }
+//            else return false;
+//        };
+        
         //if not last branch
         if(branches > 1) {
             Move m;
@@ -98,9 +109,8 @@ public class ChessAI {
                                     temp = branch(branches - 1, game);
                                     game.undoMove();
                                     //choose best move dependent on score
-                                    if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27) {
+                                    if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                         eval = temp;
-                                    }
                                 }
                             }
                         }
@@ -116,27 +126,154 @@ public class ChessAI {
 
     //choose a move by evaulating multiple positions
     public Move aiMakeMove(Board game) {
+        
         //vars
         double eval = evaluate(game); 
-        int possibleMoves = 0;
+        int possibleMoves = 0, color = game.turnCount % 2 == 0 ? 1 : -1;
         Move[] moves = new Move[64];
         double[] scores = new double[64];
+        long start = System.currentTimeMillis();
+        
+        //lambda for next block
+        java.util.function.BiFunction<Move, Integer, Boolean> operateMove = (m, i) -> {
+            if(game.isLegal(m, true)) {
+                moves[i] = m;
+                game.makeMove(m);
+                scores[i] = branch(3, game);
+                game.undoMove();
+                return true;
+            }
+            else return false;
+        };
         
         //get and evaluate all possible moves
         for(int x = 0; x < 8; x++) {
             for(int y = 0; y < 8; y++) {
                 if(game.board[x][y].name != ' ' && game.board[x][y].color == 
                         (game.turnCount % 2 == 0 ? Color.WHITE : Color.BLACK)) {
-                    for(int ex = 0; ex < 8; ex++) {
-                        for(int ey = 0; ey < 8; ey++) {
-                            if(game.isLegal(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]), true)) {
-                                moves[possibleMoves] = new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]);
-                                game.makeMove(moves[possibleMoves]);
-                                scores[possibleMoves] = branch(3, game);
-                                game.undoMove();
+                    //find all legal moves
+                    switch(game.board[x][y].name) {
+                        case 'P': 
+                            if(operateMove.apply(new Move(x, x, y, y-color, game.board[x][y], game.board[x][y-color]), possibleMoves))
                                 possibleMoves++;
-                            }
-                        }
+                            if(y != (color > 0 ? 1 : 6) && operateMove.apply(new Move(x, x, y, y-2*color, game.board[x][y], game.board[x][y-2*color]), possibleMoves))
+                                possibleMoves++;
+                            if(x > 0 && operateMove.apply(new Move(x, x-1, y, y-color, game.board[x][y], game.board[x-1][y-color]), possibleMoves))
+                                possibleMoves++;
+                            if(x < 7 && operateMove.apply(new Move(x, x+1, y, y-color, game.board[x][y], game.board[x+1][y-color]), possibleMoves))
+                                possibleMoves++;
+                            break;
+                        case 'N':
+                            if(x > 1 && y > 0 && operateMove.apply(new Move(x, x-2, y, y-1, game.board[x][y], game.board[x-2][y-1]), possibleMoves))
+                                possibleMoves++;
+                            if(x > 1 && y < 7 && operateMove.apply(new Move(x, x-2, y, y+1, game.board[x][y], game.board[x-2][y+1]), possibleMoves))
+                                possibleMoves++;
+                            if(x < 6 && y > 0 && operateMove.apply(new Move(x, x+2, y, y-1, game.board[x][y], game.board[x+2][y-1]), possibleMoves))
+                                possibleMoves++;
+                            if(x < 6 && y < 7 && operateMove.apply(new Move(x, x+2, y, y+1, game.board[x][y], game.board[x+2][y+1]), possibleMoves))
+                                possibleMoves++;
+                            if(x > 0 && y > 1 && operateMove.apply(new Move(x, x-1, y, y-2, game.board[x][y], game.board[x-1][y-2]), possibleMoves))
+                                possibleMoves++;
+                            if(x > 0 && y < 6 && operateMove.apply(new Move(x, x-1, y, y+2, game.board[x][y], game.board[x-1][y+2]), possibleMoves))
+                                possibleMoves++;
+                            if(x < 7 && y > 1 && operateMove.apply(new Move(x, x+1, y, y-2, game.board[x][y], game.board[x+1][y-2]), possibleMoves))
+                                possibleMoves++;
+                            if(x < 7 && y < 6 && operateMove.apply(new Move(x, x+1, y, y+2, game.board[x][y], game.board[x+1][y+2]), possibleMoves))
+                                possibleMoves++;
+                            break;
+                        case 'B':
+                            for(int ex = x-1, ey = y-1; ex >= 0 && ey >= 0; ex--, ey--)
+                                if(operateMove.apply(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]), possibleMoves))
+                                    possibleMoves++;
+                                else break;
+                            for(int ex = x-1, ey = y+1; ex >= 0 && ey < 8; ex--, ey++)
+                                if(operateMove.apply(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]), possibleMoves))
+                                    possibleMoves++;
+                                else break;
+                            for(int ex = x+1, ey = y-1; ex < 8 && ey >= 0; ex++, ey--)
+                                if(operateMove.apply(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]), possibleMoves))
+                                    possibleMoves++;
+                                else break;
+                            for(int ex = x+1, ey = y+1; ex < 8 && ey < 8; ex++, ey++)
+                                if(operateMove.apply(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]), possibleMoves))
+                                    possibleMoves++;
+                                else break;
+                            break;
+                        case 'R':
+                            for(int ex = x-1; ex >= 0; ex--)
+                                if(operateMove.apply(new Move(x, ex, y, y, game.board[x][y], game.board[ex][y]), possibleMoves))
+                                    possibleMoves++;
+                                else break;
+                            for(int ex = x+1; ex < 8; ex++)
+                                if(operateMove.apply(new Move(x, ex, y, y, game.board[x][y], game.board[ex][y]), possibleMoves))
+                                    possibleMoves++;
+                                else break;
+                            for(int ey = y-1; ey >= 0; ey--)
+                                if(operateMove.apply(new Move(x, x, y, ey, game.board[x][y], game.board[x][ey]), possibleMoves))
+                                    possibleMoves++;
+                                else break;
+                            for(int ey = y+1; ey < 8; ey++)
+                                if(operateMove.apply(new Move(x, x, y, ey, game.board[x][y], game.board[x][ey]), possibleMoves))
+                                    possibleMoves++;
+                                else break;
+                            break;
+                        case 'Q':
+                            for(int ex = x-1, ey = y-1; ex >= 0 && ey >= 0; ex--, ey--)
+                                if(operateMove.apply(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]), possibleMoves))
+                                    possibleMoves++;
+                                else break;
+                            for(int ex = x-1, ey = y+1; ex >= 0 && ey < 8; ex--, ey++)
+                                if(operateMove.apply(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]), possibleMoves))
+                                    possibleMoves++;
+                                else break;
+                            for(int ex = x+1, ey = y-1; ex < 8 && ey >= 0; ex++, ey--)
+                                if(operateMove.apply(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]), possibleMoves))
+                                    possibleMoves++;
+                                else break;
+                            for(int ex = x+1, ey = y+1; ex < 8 && ey < 8; ex++, ey++)
+                                if(operateMove.apply(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]), possibleMoves))
+                                    possibleMoves++;
+                                else break;
+                            for(int ex = x-1; ex >= 0; ex--)
+                                if(operateMove.apply(new Move(x, ex, y, y, game.board[x][y], game.board[ex][y]), possibleMoves))
+                                    possibleMoves++;
+                                else break;
+                            for(int ex = x+1; ex < 8; ex++)
+                                if(operateMove.apply(new Move(x, ex, y, y, game.board[x][y], game.board[ex][y]), possibleMoves))
+                                    possibleMoves++;
+                                else break;
+                            for(int ey = y-1; ey >= 0; ey--)
+                                if(operateMove.apply(new Move(x, x, y, ey, game.board[x][y], game.board[x][ey]), possibleMoves))
+                                    possibleMoves++;
+                                else break;
+                            for(int ey = y+1; ey < 8; ey++)
+                                if(operateMove.apply(new Move(x, x, y, ey, game.board[x][y], game.board[x][ey]), possibleMoves))
+                                    possibleMoves++;
+                                else break;
+                            break;
+                        case 'K':
+                            if(x > 0 && y > 0 && operateMove.apply(new Move(x, x-1, y, y-1, game.board[x][y], game.board[x-1][y-1]), possibleMoves))
+                                possibleMoves++;
+                            if(x > 0 && y > 0 && operateMove.apply(new Move(x, x-1, y, y, game.board[x][y], game.board[x-1][y]), possibleMoves))
+                                possibleMoves++;
+                            if(x > 0 && y < 7 && operateMove.apply(new Move(x, x-1, y, y+1, game.board[x][y], game.board[x-1][y+1]), possibleMoves))
+                                possibleMoves++;
+                            if(y > 0 && operateMove.apply(new Move(x, x, y, y-1, game.board[x][y], game.board[x][y-1]), possibleMoves))
+                                possibleMoves++;
+                            if(y < 7 && operateMove.apply(new Move(x, x, y, y+1, game.board[x][y], game.board[x][y+1]), possibleMoves))
+                                possibleMoves++;
+                            if(x < 7 && y > 0 && operateMove.apply(new Move(x, x+1, y, y-1, game.board[x][y], game.board[x+1][y-1]), possibleMoves))
+                                possibleMoves++;
+                            if(x < 7 && operateMove.apply(new Move(x, x+1, y, y, game.board[x][y], game.board[x+1][y]), possibleMoves))
+                                possibleMoves++;
+                            if(x < 7 && y < 7 && operateMove.apply(new Move(x, x+1, y, y+1, game.board[x][y], game.board[x+1][y+1]), possibleMoves))
+                                possibleMoves++;
+                            if(x == 4 && operateMove.apply(new Move(x, x+2, y, y, game.board[x][y], game.board[x+2][y]), possibleMoves))
+                                possibleMoves++;
+                            if(x == 4 && operateMove.apply(new Move(x, x-2, y, y, game.board[x][y], game.board[x-2][y]), possibleMoves))
+                                possibleMoves++;
+                            break;
+                        default: System.out.print("Error."); //should never happen
                     }
                 }
             }
@@ -149,6 +286,8 @@ public class ChessAI {
         
         //quicksort moves based on score
         quickSort(nScores, nMoves, 0, possibleMoves - 1);
+        
+        System.out.print("Processing time: " + (System.currentTimeMillis() - start));
         
         return nMoves[(game.turnCount % 2 == 0 ? possibleMoves : 0)];
     }
