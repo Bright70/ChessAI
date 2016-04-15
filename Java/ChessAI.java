@@ -81,13 +81,14 @@ public class ChessAI {
         double score = evaluate(game);
         
         //if not last branch
-        if(branches > 0) {
+        if(branches > 1) {
             Move m;
-            double eval = 1.675e-27, temp;
+            double temp, eval = 1.675e-27;
             //find all legal moves
             for(int x = 0; x < 8; x++) {
                 for(int y = 0; y < 8; y++) {
-                    if(game.board[x][y].name != ' ') {
+                    if(game.board[x][y].name != ' ' && game.board[x][y].color == 
+                            (game.turnCount % 2 == 0 ? Color.WHITE : Color.BLACK)) {
                         for(int ex = 0; ex < 8; ex++) {
                             for(int ey = 0; ey < 8; ey++) {
                                 if(game.isLegal(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]), true)) {
@@ -116,23 +117,22 @@ public class ChessAI {
     //choose a move by evaulating multiple positions
     public Move aiMakeMove(Board game) {
         //vars
-        double eval; int possibleMoves = 0;
+        double eval = evaluate(game); 
+        int possibleMoves = 0;
         Move[] moves = new Move[64];
         double[] scores = new double[64];
-        
-        //get current score
-        eval = evaluate(game);
         
         //get and evaluate all possible moves
         for(int x = 0; x < 8; x++) {
             for(int y = 0; y < 8; y++) {
-                if(game.board[x][y].name != ' ') {
+                if(game.board[x][y].name != ' ' && game.board[x][y].color == 
+                        (game.turnCount % 2 == 0 ? Color.WHITE : Color.BLACK)) {
                     for(int ex = 0; ex < 8; ex++) {
                         for(int ey = 0; ey < 8; ey++) {
                             if(game.isLegal(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]), true)) {
                                 moves[possibleMoves] = new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]);
                                 game.makeMove(moves[possibleMoves]);
-                                scores[possibleMoves] = evaluate(game);
+                                scores[possibleMoves] = branch(3, game);
                                 game.undoMove();
                                 possibleMoves++;
                             }
