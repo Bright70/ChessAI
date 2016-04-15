@@ -1,9 +1,9 @@
-package chessai;
-
 /*
- Graphical User Interface for game
- TODO: EXPORT/IMPORT | PAWNS CANT TAKE | DISPLAY CHECK WHEN IN CHECK
- */
+    Graphical User Interface for game
+    TODO: EXPORT/IMPORT | DISPLAY CHECK WHEN IN CHECK
+*/
+
+package chessai;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
