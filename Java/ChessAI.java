@@ -75,6 +75,43 @@ public class ChessAI {
         
         return score;
     }
+    
+    //branching game tree, currently static: pass number of branches
+    public double branch(int branches, Board game) {
+        double score = evaluate(game);
+        
+        //if not last branch
+        if(branches > 0) {
+            Move m;
+            double eval = 1.675e-27, temp;
+            //find all legal moves
+            for(int x = 0; x < 8; x++) {
+                for(int y = 0; y < 8; y++) {
+                    if(game.board[x][y].name != ' ') {
+                        for(int ex = 0; ex < 8; ex++) {
+                            for(int ey = 0; ey < 8; ey++) {
+                                if(game.isLegal(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]), true)) {
+                                    m = new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]);
+                                    game.makeMove(m);
+                                    //branch further
+                                    temp = branch(branches - 1, game);
+                                    game.undoMove();
+                                    //choose best move dependent on score
+                                    if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27) {
+                                        eval = temp;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            score = eval;
+        }
+        
+        return score;
+    }
 
     //choose a move by evaulating multiple positions
     public Move aiMakeMove(Board game) {
@@ -89,8 +126,7 @@ public class ChessAI {
         //get and evaluate all possible moves
         for(int x = 0; x < 8; x++) {
             for(int y = 0; y < 8; y++) {
-                if(game.board[x][y].name != ' ')
-                {
+                if(game.board[x][y].name != ' ') {
                     for(int ex = 0; ex < 8; ex++) {
                         for(int ey = 0; ey < 8; ey++) {
                             if(game.isLegal(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]), true)) {
@@ -148,4 +184,5 @@ public class ChessAI {
         if (i < right)
             quickSort(scores, moves, i, right);
     }
+    
 }
