@@ -21,7 +21,11 @@ class aiThread extends Thread {
     aiThread(int arrPos, Board game) {
         this.arrPos = arrPos;
         this.game = game;
-        branch(3, game);
+    }
+    
+    @Override
+    public void start() {
+        ChessAI.scores[arrPos] = branch(3, game);
     }
     
     //evaluate position, return score
@@ -505,9 +509,6 @@ class aiThread extends Thread {
             }
             
             score = eval;
-        }
-        else {
-            ChessAI.scores[arrPos] = score;
         }
         
         return score;
