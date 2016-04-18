@@ -427,7 +427,6 @@ public final class Board {
             	board[m.ex][m.sy] = new Pawn((turnCount % 2 == 1 ? Color.WHITE : Color.BLACK));
             }
             else if(m.piece.name == 'K' && m.ex - m.sx == 2) { //kingside castling
-            	System.out.println("Undo castling");
             	//reset bools
             	hasMoved[1][(turnCount % 2 == 0 ? 0 : 1)] = false;
             	swap(5, 7, m.sy, m.ey);
@@ -444,7 +443,7 @@ public final class Board {
 		board[m.sx][m.sy] = new Pawn(turnCount % 2 == 0 ? Color.WHITE : Color.BLACK);
 	    }
             
-            //reset bools for castling
+            //reset bools for castling: rooks
             if((m.ex == 0 || m.ex == 7) && (m.ey == 0 || m.ey == 7))
                 for(int i = 0; i <= turnCount; i++)
                     if(i == turnCount)
@@ -458,6 +457,13 @@ public final class Board {
                         hasMoved[(m.sx == 0 ? 0 : 2)][(m.sy == 0 ? 1 : 0)] = false;
                     else if((moves[i].ex == m.sx && moves[i].ey == m.sy) || 
                             (moves[i].sx == m.sx && moves[i].sy == m.sy))
+                        break;
+            //king
+            if(m.piece.name == 'K' && m.sx == 4 && m.sy == (turnCount % 2 == 0 ? 7 : 0))
+                for(int i = 0; i <= turnCount; i++)
+                    if(i == turnCount)
+                        hasMoved[1][turnCount % 2 == 0 ? 0 : 1] = false;
+                    else if(moves[i].sx == 4 && moves[i].sy == (turnCount % 2 == 0 ? 7 : 0))
                         break;
         }
     }
