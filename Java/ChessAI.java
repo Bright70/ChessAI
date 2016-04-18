@@ -11,18 +11,19 @@
 
 package chessai;
 
-public class ChessAI {
-    //variables
 
-    //initialize vars
-    public ChessAI() {
-        
+class aiThread extends Thread{
+
+    int arrPos;
+
+    aiThread(int arrPos){
+        this.arrPos = arrPos;
+        branch();
     }
-    
-    //evaluate position, return score
+
     public double evaluate(Board game) {
         double score = 0; //positive means advantage for white
-        
+
         //compare piece values, considering mobility
         double[] pieceValues = new double[2]; //0 = white, 1 = black
         int turnCount = game.turnCount;
@@ -31,29 +32,29 @@ public class ChessAI {
         for(int x = 0; x < 8; x++) {
             for(int y = 0; y < 8; y++) {
                 legalMoves = 0;
-                
+
                 //for each piece
                 if(game.board[x][y].name != ' ') {
                     //reference for better readability
                     p = game.board[x][y];
-                    
+
                     //change turns to check legality
                     if(game.turnCount % 2 != (p.color == Color.WHITE ? 0 : 1))
-                                game.turnCount++;
-                    
-                	//should eventually optimize for individual pieces
+                        game.turnCount++;
+
+                    //should eventually optimize for individual pieces
                     //find all legal moves
                     for(int ex = 0; ex < 8; ex++) {
                         for(int ey = 0; ey < 8; ey++) {
-                            
+
                             if(game.isLegal(new Move(x, ex, y, ey, p, game.board[ex][ey]), false))
                                 legalMoves++;
                         }
                     }
-                    
+
                     //reset turnCount
                     game.turnCount = turnCount;
-                    
+
                     //calculate mobility bonuses
                     switch(p.name) {
                         case 'P': bonus = Math.pow(legalMoves / 4.6 - 0.6, 3) + 1; break;
@@ -70,17 +71,16 @@ public class ChessAI {
         }
         //add to weighted score
         score += (pieceValues[0] - pieceValues[1]) * 0.2;
-        
-        //check other stuff
-        
+
+        ChessAI.nScores[arrPos] = score;
         return score;
     }
-    
+
     //branching game tree, currently static: pass number of branches
     public double branch(int branches, Board game) {
         double score = evaluate(game);
         int color = game.turnCount % 2 == 0 ? 1 : -1;
-        
+
         //lambda for next block
         java.util.function.Function<Move, Boolean> operateMove = (m) -> {
             if(game.isLegal(m, true)) {
@@ -89,7 +89,7 @@ public class ChessAI {
             }
             else return false;
         };
-        
+
         //if not last branch
         if(branches > 1) {
             Move m;
@@ -97,11 +97,11 @@ public class ChessAI {
             //find all legal moves
             for(int x = 0; x < 8; x++) {
                 for(int y = 0; y < 8; y++) {
-                    if(game.board[x][y].name != ' ' && game.board[x][y].color == 
+                    if(game.board[x][y].name != ' ' && game.board[x][y].color ==
                             (game.turnCount % 2 == 0 ? Color.WHITE : Color.BLACK)) {
                         //find all legal moves
                         switch(game.board[x][y].name) {
-                            case 'P': 
+                            case 'P':
                                 if(operateMove.apply(new Move(x, x, y, y-color, game.board[x][y], game.board[x][y-color]))) {
                                     //branch further
                                     temp = branch(branches - 1, game);
@@ -315,95 +315,103 @@ public class ChessAI {
                                 break;
                             case 'K':
                                 if(x > 0 && y > 0 && operateMove.apply(new Move(x, x-1, y, y-1, game.board[x][y], game.board[x-1][y-1]))) {
-                                        temp = branch(branches - 1, game);
-                                        game.undoMove();
-                                        if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
-                                            eval = temp;
-                                    }
+                                    temp = branch(branches - 1, game);
+                                    game.undoMove();
+                                    if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
+                                        eval = temp;
+                                }
                                 if(x > 0 && y > 0 && operateMove.apply(new Move(x, x-1, y, y, game.board[x][y], game.board[x-1][y]))) {
-                                        temp = branch(branches - 1, game);
-                                        game.undoMove();
-                                        if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
-                                            eval = temp;
-                                    }
+                                    temp = branch(branches - 1, game);
+                                    game.undoMove();
+                                    if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
+                                        eval = temp;
+                                }
                                 if(x > 0 && y < 7 && operateMove.apply(new Move(x, x-1, y, y+1, game.board[x][y], game.board[x-1][y+1]))) {
-                                        temp = branch(branches - 1, game);
-                                        game.undoMove();
-                                        if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
-                                            eval = temp;
-                                    }
+                                    temp = branch(branches - 1, game);
+                                    game.undoMove();
+                                    if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
+                                        eval = temp;
+                                }
                                 if(y > 0 && operateMove.apply(new Move(x, x, y, y-1, game.board[x][y], game.board[x][y-1]))) {
-                                        temp = branch(branches - 1, game);
-                                        game.undoMove();
-                                        if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
-                                            eval = temp;
-                                    }
+                                    temp = branch(branches - 1, game);
+                                    game.undoMove();
+                                    if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
+                                        eval = temp;
+                                }
                                 if(y < 7 && operateMove.apply(new Move(x, x, y, y+1, game.board[x][y], game.board[x][y+1]))) {
-                                        temp = branch(branches - 1, game);
-                                        game.undoMove();
-                                        if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
-                                            eval = temp;
-                                    }
+                                    temp = branch(branches - 1, game);
+                                    game.undoMove();
+                                    if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
+                                        eval = temp;
+                                }
                                 if(x < 7 && y > 0 && operateMove.apply(new Move(x, x+1, y, y-1, game.board[x][y], game.board[x+1][y-1]))) {
-                                        temp = branch(branches - 1, game);
-                                        game.undoMove();
-                                        if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
-                                            eval = temp;
-                                    }
+                                    temp = branch(branches - 1, game);
+                                    game.undoMove();
+                                    if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
+                                        eval = temp;
+                                }
                                 if(x < 7 && operateMove.apply(new Move(x, x+1, y, y, game.board[x][y], game.board[x+1][y]))) {
-                                        temp = branch(branches - 1, game);
-                                        game.undoMove();
-                                        if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
-                                            eval = temp;
-                                    }
+                                    temp = branch(branches - 1, game);
+                                    game.undoMove();
+                                    if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
+                                        eval = temp;
+                                }
                                 if(x < 7 && y < 7 && operateMove.apply(new Move(x, x+1, y, y+1, game.board[x][y], game.board[x+1][y+1]))) {
-                                        temp = branch(branches - 1, game);
-                                        game.undoMove();
-                                        if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
-                                            eval = temp;
-                                    }
+                                    temp = branch(branches - 1, game);
+                                    game.undoMove();
+                                    if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
+                                        eval = temp;
+                                }
                                 if(x == 4 && operateMove.apply(new Move(x, x+2, y, y, game.board[x][y], game.board[x+2][y]))) {
-                                        temp = branch(branches - 1, game);
-                                        game.undoMove();
-                                        if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
-                                            eval = temp;
-                                    }
+                                    temp = branch(branches - 1, game);
+                                    game.undoMove();
+                                    if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
+                                        eval = temp;
+                                }
                                 if(x == 4 && operateMove.apply(new Move(x, x-2, y, y, game.board[x][y], game.board[x-2][y]))) {
-                                        temp = branch(branches - 1, game);
-                                        game.undoMove();
-                                        if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
-                                            eval = temp;
-                                    }
+                                    temp = branch(branches - 1, game);
+                                    game.undoMove();
+                                    if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
+                                        eval = temp;
+                                }
                                 break;
                             default: System.out.print("Error."); //should never happen
                         }
                     }
                 }
             }
-            
+
             score = eval;
         }
-        
+        ChessAI.nScores[arrPos] = score;
         return score;
+    }
+}
+
+
+public class ChessAI {
+    //variables
+
+    static double[] nScores;
+
+    //initialize vars
+    public ChessAI() {
+        
     }
 
     //choose a move by evaulating multiple positions
     public Move aiMakeMove(Board game) {
         
         //vars
-        double eval = evaluate(game); 
+        double eval;
         int possibleMoves = 0, color = game.turnCount % 2 == 0 ? 1 : -1;
         Move[] moves = new Move[64];
-        double[] scores = new double[64];
         long start = System.currentTimeMillis();
         
         //lambda for next block
         java.util.function.BiFunction<Move, Integer, Boolean> operateMove = (m, i) -> {
             if(game.isLegal(m, true)) {
                 moves[i] = m;
-                game.makeMove(m);
-                scores[i] = branch(3, game);
-                game.undoMove();
                 return true;
             }
             else return false;
@@ -544,8 +552,11 @@ public class ChessAI {
         
         Move[] nMoves = new Move[possibleMoves];
         System.arraycopy(moves, 0, nMoves, 0, possibleMoves);
-        double[] nScores = new double[possibleMoves];
-        System.arraycopy(scores, 0, nScores, 0, possibleMoves);
+        nScores = new double[possibleMoves];
+
+        for(int x = 0; x < possibleMoves; x++){
+            game.makeMove(nMoves[x]);
+        }
         
         //quicksort moves based on score
         quickSort(nScores, nMoves, 0, possibleMoves - 1);
@@ -559,7 +570,7 @@ public class ChessAI {
     public void quickSort(double[] scores, Move[] moves, int left, int right)
     {
         double temp; Move mTemp;
-        double pivot = scores[(int)((left + right) / 2)];
+        double pivot = scores[(left + right) / 2];
         int i = left, j = right;
         
         while (i <= j)
