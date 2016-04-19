@@ -31,8 +31,7 @@ public class chessMain {
             
             if(game.isLegal(move, true)) {
                 game.makeMove(move);
-                
-                System.out.print("\nComputer evaluation: " + ai.evaluate(game) + "\n");
+
                 game.displayBoard(game.board);
 
                 //experimental AI stuff
@@ -40,7 +39,6 @@ public class chessMain {
                 move = ai.aiMakeMove(game);
                 game.makeMove(move);
 
-                System.out.print("\nComputer evaluation: " + ai.evaluate(game) + "\n");
                 game.displayBoard(game.board);
             }
             else {

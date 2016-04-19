@@ -6,7 +6,7 @@
 package chessai;
 
 //threading
-class aiThread extends Thread {
+public class aiThread implements Runnable {
     //variables
     int arrPos;
     Board game;
@@ -14,14 +14,23 @@ class aiThread extends Thread {
     //initializer given move index and board
     aiThread(int arrPos, Board game) {
         this.arrPos = arrPos;
-        this.game = game;
+        this.game = new Board();
+        for(int x = 0; x < 8; x++){
+            this.game.board[x] = game.board[x].clone();
+        }
+        this.game.turnCount = game.turnCount;
+        for(int x = 0; x < 2; x++){
+            this.game.hasMoved[x] = game.hasMoved[x].clone();
+        }
+        System.arraycopy(game.moves, 0, this.game.moves, 0, this.game.turnCount);
     }
     
     @Override
-    public void start() {
-        System.out.println("arrPos:" + arrPos);
-        ChessAI.scores[arrPos] = branch(3, game);
-        System.out.print("arrPos " + arrPos + " finished.");
+    public void run() {
+        System.out.println("Thread:" + arrPos);
+        ChessAI.scores[arrPos] = branch(3, game); // not returning a score
+        ChessAI.threadRunning[arrPos] = true;
+        System.out.println("Thread " + arrPos + " finished.");
     }
     
     //evaluate position, return score
@@ -195,7 +204,6 @@ class aiThread extends Thread {
         score += (pieceValues[0] - pieceValues[1]) * 0.6;
         
         //check other stuff
-        
         return score;
     }
     
@@ -503,7 +511,6 @@ class aiThread extends Thread {
                     }
                 }
             }
-            
             score = eval;
         }
         

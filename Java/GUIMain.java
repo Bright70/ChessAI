@@ -131,6 +131,7 @@ public class GUIMain extends Application{
                 if (board.isLegal(move, true)){
                     board.makeMove(move);
                     System.out.println("Move is legal");
+                    board.makeMove(ai.aiMakeMove(board));
                 }
                 else
                     System.out.println("Move is illegal");
@@ -163,6 +164,7 @@ public class GUIMain extends Application{
                     if (board.isLegal(move, true)){
                         board.makeMove(move);
                         System.out.println("Move is legal");
+                        board.makeMove(ai.aiMakeMove(board));
                     }
                     else
                         System.out.println("Move is illegal");

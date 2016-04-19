@@ -11,10 +11,14 @@
 
 package chessai;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 //main AI
 public class ChessAI {
     //variables
     static double[] scores;
+    static boolean[] threadRunning;
 
     //initialize vars
     public ChessAI() {
@@ -175,18 +179,35 @@ public class ChessAI {
         Move[] nMoves = new Move[possibleMoves];
         System.arraycopy(moves, 0, nMoves, 0, possibleMoves);
         scores = new double[possibleMoves];
+        threadRunning = new boolean[possibleMoves];
         
         //evaluate positions
-        for(int i = 0; i < possibleMoves; i++) {
-            aiThread t = new aiThread(i, game);
-            t.start();
+        ExecutorService threadPool = Executors.newCachedThreadPool();
+        for(int i = 0; i < possibleMoves; i++){
+            game.makeMove(nMoves[i]);
+            threadPool.execute(new aiThread(i, game));
+            game.undoMove();
         }
-        
+
+        // wait till threads are done
+        while(true){
+            int dead = 0;
+            for(int x = 0; x < possibleMoves; x++){
+                if(threadRunning[x])
+                    dead++;
+            }
+            if(dead == possibleMoves)
+                break;
+        }
+
         //quicksort moves based on score
         quickSort(scores, nMoves, 0, possibleMoves - 1);
         
-        System.out.print("Processing time: " + (System.currentTimeMillis() - start));
-        
+        System.out.println("Processing time: " + (System.currentTimeMillis() - start));
+        for(int x = 0; x < possibleMoves; x++)
+            System.out.println(scores[x]);
+
+        System.out.println();
         return nMoves[(game.turnCount % 2 == 0 ? possibleMoves : 0)];
     }
     
