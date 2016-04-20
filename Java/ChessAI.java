@@ -184,9 +184,7 @@ public class ChessAI {
         //evaluate positions
         ExecutorService threadPool = Executors.newCachedThreadPool();
         for(int i = 0; i < possibleMoves; i++){
-            game.makeMove(nMoves[i]);
-            threadPool.execute(new aiThread(i, game));
-            game.undoMove();
+            threadPool.execute(new aiThread(i, game, nMoves[i]));
         }
 
         // wait till threads are done
@@ -203,9 +201,9 @@ public class ChessAI {
         //quicksort moves based on score
         quickSort(scores, nMoves, 0, possibleMoves - 1);
         
-        System.out.println("Processing time: " + (System.currentTimeMillis() - start));
-        for(int x = 0; x < possibleMoves; x++)
-            System.out.println(scores[x]);
+        System.out.println("Processing time: " + (System.currentTimeMillis() - start) + "ms / " + ((double)(System.currentTimeMillis() - start) /1000) + "s");
+        //for(int x = 0; x < possibleMoves; x++)
+        //    System.out.println(scores[x]);
 
         System.out.println();
         return nMoves[(game.turnCount % 2 == 0 ? possibleMoves : 0)];

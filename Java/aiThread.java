@@ -8,11 +8,11 @@ package chessai;
 //threading
 public class aiThread implements Runnable {
     //variables
-    int arrPos;
-    Board game;
+    private int arrPos;
+    private Board game;
     
     //initializer given move index and board
-    aiThread(int arrPos, Board game) {
+    aiThread(int arrPos, Board game, Move move) {
         this.arrPos = arrPos;
         this.game = new Board();
         for(int x = 0; x < 8; x++){
@@ -23,18 +23,19 @@ public class aiThread implements Runnable {
             this.game.hasMoved[x] = game.hasMoved[x].clone();
         }
         System.arraycopy(game.moves, 0, this.game.moves, 0, this.game.turnCount);
+        this.game.makeMove(move);
     }
     
     @Override
     public void run() {
         System.out.println("Thread:" + arrPos);
-        ChessAI.scores[arrPos] = branch(3, game); // not returning a score
+        ChessAI.scores[arrPos] = branch(3, game); // branching 5 takes ~120 seconds on my desktop
         ChessAI.threadRunning[arrPos] = true;
-        System.out.println("Thread " + arrPos + " finished.");
+        System.out.println("Thread " + arrPos + " finished with score " + ChessAI.scores[arrPos]);
     }
     
     //evaluate position, return score
-    public double evaluate(Board game) {
+    double evaluate(Board game) {
         double score; //positive means advantage for white
         
         //tempo bonus
@@ -208,7 +209,7 @@ public class aiThread implements Runnable {
     }
     
     //branching game tree, currently static: pass number of branches
-    public double branch(int branches, Board game) {
+    double branch(int branches, Board game) {
         double score = evaluate(game);
         int color = game.turnCount % 2 == 0 ? 1 : -1;
         
@@ -223,7 +224,6 @@ public class aiThread implements Runnable {
         
         //if not last branch
         if(branches > 1) {
-            Move m;
             double temp, eval = 1.675e-27;
             //find all legal moves
             for(int x = 0; x < 8; x++) {

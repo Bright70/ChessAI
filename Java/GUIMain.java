@@ -1,6 +1,6 @@
 /*
     Graphical User Interface for game
-    TODO: EXPORT/IMPORT | DISPLAY CHECK WHEN IN CHECK
+    TODO: FIX UNDO | DISPLAY CHECK WHEN IN CHECK
 */
 
 package chessai;
@@ -242,7 +242,7 @@ public class GUIMain extends Application{
         MenuItem newGameMenu = new MenuItem("New Game");
         newGameMenu.setOnAction(event -> {board = new Board(); updateBoard();});
         MenuItem undoMenu = new MenuItem("Undo");
-        undoMenu.setOnAction(event -> {board.undoMove(); updateBoard();});
+        undoMenu.setOnAction(event -> {board.undoMove(); board.undoMove(); updateBoard();});
         MenuItem exportMenu = new MenuItem("Export");
         exportMenu.setOnAction(event -> exportBoard());
         MenuItem importMenu = new MenuItem("Import");
