@@ -7,6 +7,7 @@
         Space advantage
         King safety
         Whose turn it is
+        Pawn structure
 */
 
 package chessai;
@@ -29,7 +30,6 @@ public class ChessAI {
     public Move aiMakeMove(Board game) {
         
         //vars
-        double eval; 
         int possibleMoves = 0, color = game.turnCount % 2 == 0 ? 1 : -1;
         Move[] moves = new Move[64];
         long start = System.currentTimeMillis();
@@ -183,17 +183,15 @@ public class ChessAI {
         
         //evaluate positions
         ExecutorService threadPool = Executors.newCachedThreadPool();
-        for(int i = 0; i < possibleMoves; i++){
+        for(int i = 0; i < possibleMoves; i++)
             threadPool.execute(new aiThread(i, game, nMoves[i]));
-        }
 
-        // wait till threads are done
-        while(true){
+        //wait until threads are done
+        while(true) {
             int dead = 0;
-            for(int x = 0; x < possibleMoves; x++){
+            for(int x = 0; x < possibleMoves; x++)
                 if(threadRunning[x])
                     dead++;
-            }
             if(dead == possibleMoves)
                 break;
         }
@@ -201,9 +199,7 @@ public class ChessAI {
         //quicksort moves based on score
         quickSort(scores, nMoves, 0, possibleMoves - 1);
         
-        System.out.println("Processing time: " + (System.currentTimeMillis() - start) + "ms / " + ((double)(System.currentTimeMillis() - start) /1000) + "s");
-        //for(int x = 0; x < possibleMoves; x++)
-        //    System.out.println(scores[x]);
+        System.out.println("\nProcessing time: " + (((double)System.currentTimeMillis() - start) / 1000) + "s");
 
         System.out.println();
         return nMoves[(game.turnCount % 2 == 0 ? possibleMoves : 0)];
