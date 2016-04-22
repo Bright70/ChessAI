@@ -28,11 +28,9 @@ public class ChessAI {
 
     //choose a move by evaulating multiple positions with threads
     public Move aiMakeMove(Board game) {
-        
         //vars
         int possibleMoves = 0, color = game.turnCount % 2 == 0 ? 1 : -1;
         Move[] moves = new Move[64];
-        long start = System.currentTimeMillis();
         
         //lambda for next block
         java.util.function.BiFunction<Move, Integer, Boolean> operateMove = (m, i) -> {
@@ -198,10 +196,8 @@ public class ChessAI {
 
         //quicksort moves based on score
         quickSort(scores, nMoves, 0, possibleMoves - 1);
-        
-        System.out.println("\nProcessing time: " + (((double)System.currentTimeMillis() - start) / 1000) + "s");
 
-        System.out.println();
+        System.out.print("\nComputer evaluation: " + scores[(game.turnCount % 2 == 0 ? possibleMoves : 0)]);
         return nMoves[(game.turnCount % 2 == 0 ? possibleMoves : 0)];
     }
     
