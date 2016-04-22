@@ -1,5 +1,5 @@
 /*
-    Temporary interface for chessAI.
+    Console interface for chessAI.
  */
 
 package chessai;
@@ -16,6 +16,7 @@ public class chessMain {
         ChessAI ai = new ChessAI();
         Board game = new Board();
         String input;
+        long start;
         
         game.displayBoard(game.board);
         
@@ -25,20 +26,20 @@ public class chessMain {
             System.out.print((game.turnCount % 2 == 0 ? "White" : "Black") + "'s turn: ");
             input = in.nextLine();
 
-            System.out.print("\n\n\n\n\n\n\n\n\n\n");
+            System.out.print("\n\n");
             
             Move move = convertMove(input, game);
             
             if(game.isLegal(move, true)) {
                 game.makeMove(move);
-
                 game.displayBoard(game.board);
 
                 //experimental AI stuff
                 System.out.print("Computer is thinking...");
+                start = System.currentTimeMillis();
                 move = ai.aiMakeMove(game);
+                System.out.println("\nProcessing time: " + (((double)System.currentTimeMillis() - start) / 1000) + "s");
                 game.makeMove(move);
-
                 game.displayBoard(game.board);
             }
             else {
