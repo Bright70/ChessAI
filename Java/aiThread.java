@@ -28,10 +28,10 @@ public class aiThread implements Runnable {
     
     @Override
     public void run() {
-        System.out.println("Thread:" + arrPos);
+//        System.out.println("Thread:" + arrPos);
         ChessAI.scores[arrPos] = branch(3, game); // branching 5 takes ~120 seconds on my desktop
         ChessAI.threadRunning[arrPos] = true;
-        System.out.println("Thread " + arrPos + " finished with score " + ChessAI.scores[arrPos]);
+//        System.out.println("Thread " + arrPos + " finished with score " + ChessAI.scores[arrPos]);
     }
     
     //evaluate position, return score
@@ -41,8 +41,8 @@ public class aiThread implements Runnable {
         //tempo bonus
         score = game.turnCount % 2 == 0 ? 0.1 : -0.1;
         
-        //compare piece values, considering mobility
-        double[] pieceValues = new double[2]; //0 = white, 1 = black
+        //piece value and mobility bonus
+        double[] pieceBonus = new double[2]; //0 = white, 1 = black
         int turnCount = game.turnCount, legalMoves;
         double bonus;
         Piece p;
@@ -197,12 +197,125 @@ public class aiThread implements Runnable {
                         case 'K': bonus = Math.pow((double)legalMoves / 8.2 - 0.4, 3) + 1; break;
                         default: bonus = 0; break;
                     }
-                    pieceValues[(p.color == Color.WHITE ? 0 : 1)] += p.value * bonus;
+                    pieceBonus[(p.color == Color.WHITE ? 0 : 1)] += p.value * bonus;
                 }
             }
         }
-        //add to weighted score
-        score += (pieceValues[0] - pieceValues[1]) * 0.6;
+        //add to score
+        score += (pieceBonus[0] - pieceBonus[1]) * 0.8;
+        
+        //space bonus
+        int[] spaceBonus = new int[2]; //0 = white, 1 = black
+        //white bonus
+        for(int x = 0; x < 8; x++)
+            for(int y = 1; y < 7; y++)
+                if(game.board[x][y].name == 'P' && game.board[x][y].color == Color.WHITE) {
+                    for(int i = y + 1; i < 8; i++)
+                        if(game.board[x][i].color != Color.BLACK)
+                            spaceBonus[0]++;
+                    break;
+                }
+        //black bonus
+        for(int x = 0; x < 8; x++)
+            for(int y = 6; y > 0; y--)
+                if(game.board[x][y].name == 'P' && game.board[x][y].color == Color.BLACK) {
+                    for(int i = y - 1; i >= 0; i--)
+                        if(game.board[x][i].color != Color.WHITE)
+                            spaceBonus[1]++;
+                    break;
+                }
+        //add to score
+        if(spaceBonus[0] != 0 || spaceBonus[1] != 0)
+            score += ((double)(spaceBonus[0] - spaceBonus[1]) / 
+                    (spaceBonus[0] > spaceBonus[1] ? spaceBonus[0] : spaceBonus[1]));
+        else score += (double)(spaceBonus[0] > spaceBonus[1] ? spaceBonus[0] : -spaceBonus[1]) / 8;
+        
+        //king safety bonus
+        double[] kingSafetyBonus = new double[2]; //0 white, 1 black
+        //white bonus
+        for(int x = 0; x < 8; x++)
+            for(int y = 0; y < 8; y++)
+                //find white king
+                if(game.board[x][y].name == 'K' && game.board[x][y].color == Color.WHITE) {
+                    //check 5x5 square around king
+                    for(int x2 = x - 2; x2 <= x + 2; x2++)
+                        for(int y2 = y - 2; y2 <= y + 2; y2++)
+                            if(x2 >= 0 && x2 < 8 && y2 >= 0 && y2 < 8) {
+                                switch(game.board[x2][y2].color) {
+                                    case WHITE:
+                                        //individual piece bonuses
+                                        switch(game.board[x2][y2].name) {
+                                            case 'P': 
+                                                kingSafetyBonus[0] += 1 * (Math.abs(x2-x) < 2 && Math.abs(y2-y) < 2 ? 0.7: 0.3); 
+                                                break;
+                                            case 'N':
+                                                kingSafetyBonus[0] += 0.3 * (Math.abs(x2-x) < 2 && Math.abs(y2-y) < 2 ? 0.7: 0.3); 
+                                                break;
+                                            case 'B':
+                                                kingSafetyBonus[0] += 0.25 * (Math.abs(x2-x) < 2 && Math.abs(y2-y) < 2 ? 0.7: 0.3); 
+                                                break;
+                                            case 'R':
+                                                kingSafetyBonus[0] += 0.45 * (Math.abs(x2-x) < 2 && Math.abs(y2-y) < 2 ? 0.7: 0.3); 
+                                                break;
+                                            case 'Q':
+                                                kingSafetyBonus[0] += 0.2 * (Math.abs(x2-x) < 2 && Math.abs(y2-y) < 2 ? 0.7: 0.3); 
+                                                break;
+                                            case 'K': break;
+                                            default: break;
+                                        }
+                                        break;
+                                    case BLACK:
+                                        kingSafetyBonus[0] -= 1.5 * (Math.abs(x2-x) < 2 && Math.abs(y2-y) < 2 ? 0.7: 0.3);
+                                        break;
+                                    case NONE: break;
+                                }
+                            }
+                    x = 8;
+                    break;
+                }
+        //black bonus
+        for(int x = 0; x < 8; x++)
+            for(int y = 0; y < 8; y++)
+                //find white king
+                if(game.board[x][y].name == 'K' && game.board[x][y].color == Color.BLACK) {
+                    //check 5x5 square around king
+                    for(int x2 = x - 2; x2 <= x + 2; x2++)
+                        for(int y2 = y - 2; y2 <= y + 2; y2++)
+                            if(x2 >= 0 && x2 < 8 && y2 >= 0 && y2 < 8) {
+                                switch(game.board[x2][y2].color) {
+                                    case BLACK:
+                                        //individual piece bonuses
+                                        switch(game.board[x2][y2].name) {
+                                            case 'P': 
+                                                kingSafetyBonus[1] += 1 * (Math.abs(x2-x) < 2 && Math.abs(y2-y) < 2 ? 0.7: 0.3); 
+                                                break;
+                                            case 'N':
+                                                kingSafetyBonus[1] += 0.3 * (Math.abs(x2-x) < 2 && Math.abs(y2-y) < 2 ? 0.7: 0.3); 
+                                                break;
+                                            case 'B':
+                                                kingSafetyBonus[1] += 0.25 * (Math.abs(x2-x) < 2 && Math.abs(y2-y) < 2 ? 0.7: 0.3); 
+                                                break;
+                                            case 'R':
+                                                kingSafetyBonus[1] += 0.45 * (Math.abs(x2-x) < 2 && Math.abs(y2-y) < 2 ? 0.7: 0.3); 
+                                                break;
+                                            case 'Q':
+                                                kingSafetyBonus[1] += 0.2 * (Math.abs(x2-x) < 2 && Math.abs(y2-y) < 2 ? 0.7: 0.3); 
+                                                break;
+                                            case 'K': break;
+                                            default: break;
+                                        }
+                                        break;
+                                    case WHITE:
+                                        kingSafetyBonus[1] -= 1.5 * (Math.abs(x2-x) < 2 && Math.abs(y2-y) < 2 ? 0.7: 0.3);
+                                        break;
+                                    case NONE: break;
+                                }
+                            }
+                    x = 8;
+                    break;
+                }
+        //add to score
+        score += 0.4 * (kingSafetyBonus[0] - kingSafetyBonus[1]);
         
         //check other stuff
         return score;
