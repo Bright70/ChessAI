@@ -19,7 +19,7 @@ import java.util.concurrent.Executors;
 public class ChessAI {
     //variables
     static double[] scores;
-    static boolean[] threadRunning;
+    static boolean[] threadDead;
 
     //initialize vars
     public ChessAI() {
@@ -177,7 +177,8 @@ public class ChessAI {
         Move[] nMoves = new Move[possibleMoves];
         System.arraycopy(moves, 0, nMoves, 0, possibleMoves);
         scores = new double[possibleMoves];
-        threadRunning = new boolean[possibleMoves];
+        threadDead = new boolean[possibleMoves];
+        boolean[] deadThread = new boolean[possibleMoves];
         
         //evaluate positions
         ExecutorService threadPool = Executors.newCachedThreadPool();
@@ -185,13 +186,22 @@ public class ChessAI {
             threadPool.execute(new aiThread(i, game, nMoves[i]));
 
         //wait until threads are done
+
         while(true) {
             int dead = 0;
             for(int x = 0; x < possibleMoves; x++)
-                if(threadRunning[x])
+                if(threadDead[x]) {
                     dead++;
-            if(dead == possibleMoves)
+                    if(!deadThread[x]) {
+                        System.out.println("Thread " + x + " dead");
+                        deadThread[x] = true;
+                    }
+                }
+            if(dead == possibleMoves){
+                threadPool.shutdown();
+                System.out.println("AI played");
                 break;
+            }
         }
 
         //quicksort moves based on score

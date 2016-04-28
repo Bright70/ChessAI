@@ -372,8 +372,8 @@ public final class Board {
                 else if((m.ey == 0 && turnCount % 2 == 0) || 
                         (m.ey == 8 && turnCount % 2 == 1)) {
                     // shouldnt interact with user, temporary
-                    System.out.println("Enter piece you want to promote to: ");
-                    String piece = chessMain.in.next();
+                    //System.out.println("Enter piece you want to promote to: ");
+                    String piece = " "; //= chessMain.in.next();
                     Color color = (turnCount % 2 == 0 ? Color.WHITE : Color.BLACK);
                     switch(piece.charAt(0)){
                         case 'Q':
@@ -390,7 +390,7 @@ public final class Board {
                             break;
                         default:
                             board[m.sx][m.sy] = new Queen(color);
-                            System.out.println("No piece was created, input invalid");
+                            System.out.println("Default piece created");
                             break;
                     }
                     chessMain.in.nextLine();

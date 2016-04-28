@@ -29,18 +29,16 @@ public class aiThread implements Runnable {
     @Override
     public void run() {
 //        System.out.println("Thread:" + arrPos);
-        ChessAI.scores[arrPos] = branch(3, game); // branching 5 takes ~120 seconds on my desktop
-        ChessAI.threadRunning[arrPos] = true;
+        ChessAI.scores[arrPos] = branch(1, game);
+        ChessAI.threadDead[arrPos] = true;
 //        System.out.println("Thread " + arrPos + " finished with score " + ChessAI.scores[arrPos]);
     }
     
     //evaluate position, return score
     double evaluate(Board game) {
-        double score; //positive means advantage for white
-        
-        //tempo bonus
-        score = game.turnCount % 2 == 0 ? 0.1 : -0.1;
-        
+        double score = 0; //positive means advantage for white
+
+
         //piece value and mobility bonus
         double[] pieceBonus = new double[2]; //0 = white, 1 = black
         int turnCount = game.turnCount, legalMoves;
@@ -62,7 +60,7 @@ public class aiThread implements Runnable {
                     //find all legal moves
                     switch(p.name) {
                         case 'P': 
-                            if(game.isLegal(new Move(x, x, y, y-(turnCount%2==0?1:-1), game.board[x][y], game.board[x][y-(turnCount%2==0?1:-1)]), true))
+                            if(x > 1 && y > 1 && game.isLegal(new Move(x, x, y, y-(turnCount%2==0?1:-1), game.board[x][y], game.board[x][y-(turnCount%2==0?1:-1)]), true))
                                 legalMoves++;
                             if(y != (turnCount%2==0?1:6) && game.isLegal(new Move(x, x, y, y-(turnCount%2==0?2:-2), game.board[x][y], game.board[x][y-2*(turnCount%2==0?1:-1)]), true))
                                 legalMoves++;
@@ -276,7 +274,7 @@ public class aiThread implements Runnable {
         //black bonus
         for(int x = 0; x < 8; x++)
             for(int y = 0; y < 8; y++)
-                //find white king
+                //find black king
                 if(game.board[x][y].name == 'K' && game.board[x][y].color == Color.BLACK) {
                     //check 5x5 square around king
                     for(int x2 = x - 2; x2 <= x + 2; x2++)
@@ -325,6 +323,8 @@ public class aiThread implements Runnable {
     double branch(int branches, Board game) {
         double score = evaluate(game);
         int color = game.turnCount % 2 == 0 ? 1 : -1;
+
+        System.out.println("Thread " + arrPos + " @ branch " + branches);
         
         //lambda for next block
         java.util.function.Function<Move, Boolean> operateMove = (m) -> {
@@ -334,299 +334,448 @@ public class aiThread implements Runnable {
             }
             else return false;
         };
-        
-        //if not last branch
-        if(branches > 1) {
-            double temp, eval = 1.675e-27;
-            //find all legal moves
-            for(int x = 0; x < 8; x++) {
-                for(int y = 0; y < 8; y++) {
-                    if(game.board[x][y].name != ' ' && game.board[x][y].color == 
-                            (game.turnCount % 2 == 0 ? Color.WHITE : Color.BLACK)) {
-                        //find all legal moves
-                        switch(game.board[x][y].name) {
-                            case 'P': 
-                                if(operateMove.apply(new Move(x, x, y, y-color, game.board[x][y], game.board[x][y-color]))) {
-                                    //branch further
-                                    temp = branch(branches - 1, game);
+
+        java.util.function.BooleanSupplier branchability = () -> (evaluate(game) - score) * (300.0 / ((double)branches-0.9) - 25.0) * (game.turnCount % 2 == 1 ? 1 : -1) > 30;
+
+        double temp, eval = 1.675e-27;
+        //find all legal moves
+        for(int x = 0; x < 8; x++) {
+            for(int y = 0; y < 8; y++) {
+                if(game.board[x][y].name != ' ' && game.board[x][y].color ==
+                        (game.turnCount % 2 == 0 ? Color.WHITE : Color.BLACK)) {
+                    //find all legal moves
+                    switch(game.board[x][y].name) {
+                        case 'P':
+                            if(operateMove.apply(new Move(x, x, y, y-color, game.board[x][y], game.board[x][y-color]))) {
+                                //branch further
+                                if(branchability.getAsBoolean()) { 
+                                    temp = branch(branches + 1, game);
                                     game.undoMove();
                                     //choose best move dependent on score
                                     if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                         eval = temp;
                                 }
-                                if(y != (color > 0 ? 1 : 6) && operateMove.apply(new Move(x, x, y, y-2*color, game.board[x][y], game.board[x][y-2*color]))) {
-                                    temp = branch(branches - 1, game);
+                                else
+                                    game.undoMove();
+                            }
+                            if(y != (color > 0 ? 1 : 6) && operateMove.apply(new Move(x, x, y, y-2*color, game.board[x][y], game.board[x][y-2*color]))) {
+                                if(branchability.getAsBoolean()) {  
+                                    temp = branch(branches + 1, game);
                                     game.undoMove();
                                     if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                         eval = temp;
                                 }
-                                if(x > 0 && operateMove.apply(new Move(x, x-1, y, y-color, game.board[x][y], game.board[x-1][y-color]))) {
-                                    temp = branch(branches - 1, game);
+                                else
+                                    game.undoMove();
+                            }
+                            if(x > 0 && operateMove.apply(new Move(x, x-1, y, y-color, game.board[x][y], game.board[x-1][y-color]))) {
+                                if(branchability.getAsBoolean()) {   
+                                    temp = branch(branches + 1, game);
                                     game.undoMove();
                                     if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                         eval = temp;
                                 }
-                                if(x < 7 && operateMove.apply(new Move(x, x+1, y, y-color, game.board[x][y], game.board[x+1][y-color]))) {
-                                    temp = branch(branches - 1, game);
+                                else
+                                    game.undoMove();
+                            }
+                            if(x < 7 && operateMove.apply(new Move(x, x+1, y, y-color, game.board[x][y], game.board[x+1][y-color]))) {
+                                if(branchability.getAsBoolean()) {  
+                                    temp = branch(branches + 1, game);
                                     game.undoMove();
                                     if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                         eval = temp;
                                 }
-                                break;
-                            case 'N':
-                                if(x > 1 && y > 0 && operateMove.apply(new Move(x, x-2, y, y-1, game.board[x][y], game.board[x-2][y-1]))) {
-                                    temp = branch(branches - 1, game);
+                                else
+                                    game.undoMove();
+                            }
+                            break;
+                        case 'N':
+                            if(x > 1 && y > 0 && operateMove.apply(new Move(x, x-2, y, y-1, game.board[x][y], game.board[x-2][y-1]))) {
+                                if(branchability.getAsBoolean()) {  
+                                    temp = branch(branches + 1, game);
                                     game.undoMove();
                                     if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                         eval = temp;
                                 }
-                                if(x > 1 && y < 7 && operateMove.apply(new Move(x, x-2, y, y+1, game.board[x][y], game.board[x-2][y+1]))) {
-                                    temp = branch(branches - 1, game);
+                                else
+                                    game.undoMove();
+                            }
+                            if(x > 1 && y < 7 && operateMove.apply(new Move(x, x-2, y, y+1, game.board[x][y], game.board[x-2][y+1]))) {
+                                if(branchability.getAsBoolean()) {  
+                                    temp = branch(branches + 1, game);
                                     game.undoMove();
                                     if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                         eval = temp;
                                 }
-                                if(x < 6 && y > 0 && operateMove.apply(new Move(x, x+2, y, y-1, game.board[x][y], game.board[x+2][y-1]))) {
-                                    temp = branch(branches - 1, game);
+                                else
+                                    game.undoMove();
+                            }
+                            if(x < 6 && y > 0 && operateMove.apply(new Move(x, x+2, y, y-1, game.board[x][y], game.board[x+2][y-1]))) {
+                                if(branchability.getAsBoolean()) {  
+                                    temp = branch(branches + 1, game);
                                     game.undoMove();
                                     if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                         eval = temp;
                                 }
-                                if(x < 6 && y < 7 && operateMove.apply(new Move(x, x+2, y, y+1, game.board[x][y], game.board[x+2][y+1]))) {
-                                    temp = branch(branches - 1, game);
+                                else
+                                    game.undoMove();
+                            }
+                            if(x < 6 && y < 7 && operateMove.apply(new Move(x, x+2, y, y+1, game.board[x][y], game.board[x+2][y+1]))) {
+                                if(branchability.getAsBoolean()) {  
+                                    temp = branch(branches + 1, game);
                                     game.undoMove();
                                     if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                         eval = temp;
                                 }
-                                if(x > 0 && y > 1 && operateMove.apply(new Move(x, x-1, y, y-2, game.board[x][y], game.board[x-1][y-2]))) {
-                                    temp = branch(branches - 1, game);
+                                else
+                                    game.undoMove();
+                            }
+                            if(x > 0 && y > 1 && operateMove.apply(new Move(x, x-1, y, y-2, game.board[x][y], game.board[x-1][y-2]))) {
+                                if(branchability.getAsBoolean()) {  
+                                    temp = branch(branches + 1, game);
                                     game.undoMove();
                                     if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                         eval = temp;
                                 }
-                                if(x > 0 && y < 6 && operateMove.apply(new Move(x, x-1, y, y+2, game.board[x][y], game.board[x-1][y+2]))) {
-                                    temp = branch(branches - 1, game);
+                                else
+                                    game.undoMove();
+                            }
+                            if(x > 0 && y < 6 && operateMove.apply(new Move(x, x-1, y, y+2, game.board[x][y], game.board[x-1][y+2]))) {
+                                if(branchability.getAsBoolean()) {  
+                                    temp = branch(branches + 1, game);
                                     game.undoMove();
                                     if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                         eval = temp;
                                 }
-                                if(x < 7 && y > 1 && operateMove.apply(new Move(x, x+1, y, y-2, game.board[x][y], game.board[x+1][y-2]))) {
-                                    temp = branch(branches - 1, game);
+                                else
+                                    game.undoMove();
+                            }
+                            if(x < 7 && y > 1 && operateMove.apply(new Move(x, x+1, y, y-2, game.board[x][y], game.board[x+1][y-2]))) {
+                                if(branchability.getAsBoolean()) {  
+                                    temp = branch(branches + 1, game);
                                     game.undoMove();
                                     if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                         eval = temp;
                                 }
-                                if(x < 7 && y < 6 && operateMove.apply(new Move(x, x+1, y, y+2, game.board[x][y], game.board[x+1][y+2]))) {
-                                    temp = branch(branches - 1, game);
+                                else
+                                    game.undoMove();
+                            }
+                            if(x < 7 && y < 6 && operateMove.apply(new Move(x, x+1, y, y+2, game.board[x][y], game.board[x+1][y+2]))) {
+                                if(branchability.getAsBoolean()) {  
+                                    temp = branch(branches + 1, game);
                                     game.undoMove();
                                     if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                         eval = temp;
                                 }
-                                break;
-                            case 'B':
-                                for(int ex = x-1, ey = y-1; ex >= 0 && ey >= 0; ex--, ey--)
-                                    if(operateMove.apply(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]))) {
-                                        temp = branch(branches - 1, game);
+                                else
+                                    game.undoMove();
+                            }
+                            break;
+                        case 'B':
+                            for(int ex = x-1, ey = y-1; ex >= 0 && ey >= 0; ex--, ey--)
+                                if(operateMove.apply(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]))) {
+                                    if(branchability.getAsBoolean()) {  
+                                        temp = branch(branches + 1, game);
                                         game.undoMove();
                                         if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                             eval = temp;
                                     }
-                                    else break;
-                                for(int ex = x-1, ey = y+1; ex >= 0 && ey < 8; ex--, ey++)
-                                    if(operateMove.apply(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]))) {
-                                        temp = branch(branches - 1, game);
+                                    else
+                                        game.undoMove();
+                                }
+                                else break;
+                            for(int ex = x-1, ey = y+1; ex >= 0 && ey < 8; ex--, ey++)
+                                if(operateMove.apply(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]))) {
+                                    if(branchability.getAsBoolean()) {  
+                                        temp = branch(branches + 1, game);
                                         game.undoMove();
                                         if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                             eval = temp;
                                     }
-                                    else break;
-                                for(int ex = x+1, ey = y-1; ex < 8 && ey >= 0; ex++, ey--)
-                                    if(operateMove.apply(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]))) {
-                                        temp = branch(branches - 1, game);
+                                    else
+                                        game.undoMove();
+                                }
+                                else break;
+                            for(int ex = x+1, ey = y-1; ex < 8 && ey >= 0; ex++, ey--)
+                                if(operateMove.apply(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]))) {
+                                    if(branchability.getAsBoolean()) {  
+                                        temp = branch(branches + 1, game);
                                         game.undoMove();
                                         if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                             eval = temp;
                                     }
-                                    else break;
-                                for(int ex = x+1, ey = y+1; ex < 8 && ey < 8; ex++, ey++)
-                                    if(operateMove.apply(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]))) {
-                                        temp = branch(branches - 1, game);
+                                    else
+                                        game.undoMove();
+                                }
+                                else break;
+                            for(int ex = x+1, ey = y+1; ex < 8 && ey < 8; ex++, ey++)
+                                if(operateMove.apply(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]))) {
+                                    if(branchability.getAsBoolean()) {  
+                                        temp = branch(branches + 1, game);
                                         game.undoMove();
                                         if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                             eval = temp;
                                     }
-                                    else break;
-                                break;
-                            case 'R':
-                                for(int ex = x-1; ex >= 0; ex--)
-                                    if(operateMove.apply(new Move(x, ex, y, y, game.board[x][y], game.board[ex][y]))) {
-                                        temp = branch(branches - 1, game);
+                                    else
+                                        game.undoMove();
+                                }
+                                else break;
+                            break;
+                        case 'R':
+                            for(int ex = x-1; ex >= 0; ex--)
+                                if(operateMove.apply(new Move(x, ex, y, y, game.board[x][y], game.board[ex][y]))) {
+                                    if(branchability.getAsBoolean()) {  
+                                        temp = branch(branches + 1, game);
                                         game.undoMove();
                                         if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                             eval = temp;
                                     }
-                                    else break;
-                                for(int ex = x+1; ex < 8; ex++)
-                                    if(operateMove.apply(new Move(x, ex, y, y, game.board[x][y], game.board[ex][y]))) {
-                                        temp = branch(branches - 1, game);
+                                    else
+                                        game.undoMove();
+                                }
+                                else break;
+                            for(int ex = x+1; ex < 8; ex++)
+                                if(operateMove.apply(new Move(x, ex, y, y, game.board[x][y], game.board[ex][y]))) {
+                                    if(branchability.getAsBoolean()) {  
+                                        temp = branch(branches + 1, game);
                                         game.undoMove();
                                         if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                             eval = temp;
                                     }
-                                    else break;
-                                for(int ey = y-1; ey >= 0; ey--)
-                                    if(operateMove.apply(new Move(x, x, y, ey, game.board[x][y], game.board[x][ey]))) {
-                                        temp = branch(branches - 1, game);
+                                    else
+                                        game.undoMove();
+                                }
+                                else break;
+                            for(int ey = y-1; ey >= 0; ey--)
+                                if(operateMove.apply(new Move(x, x, y, ey, game.board[x][y], game.board[x][ey]))) {
+                                    if(branchability.getAsBoolean()) {  
+                                        temp = branch(branches + 1, game);
                                         game.undoMove();
                                         if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                             eval = temp;
                                     }
-                                    else break;
-                                for(int ey = y+1; ey < 8; ey++)
-                                    if(operateMove.apply(new Move(x, x, y, ey, game.board[x][y], game.board[x][ey]))) {
-                                        temp = branch(branches - 1, game);
+                                    else
+                                        game.undoMove();
+                                }
+                                else break;
+                            for(int ey = y+1; ey < 8; ey++)
+                                if(operateMove.apply(new Move(x, x, y, ey, game.board[x][y], game.board[x][ey]))) {
+                                    if(branchability.getAsBoolean()) {  
+                                        temp = branch(branches + 1, game);
                                         game.undoMove();
                                         if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                             eval = temp;
                                     }
-                                    else break;
-                                break;
-                            case 'Q':
-                                for(int ex = x-1, ey = y-1; ex >= 0 && ey >= 0; ex--, ey--)
-                                    if(operateMove.apply(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]))) {
-                                        temp = branch(branches - 1, game);
+                                    else
+                                        game.undoMove();
+                                }
+                                else break;
+                            break;
+                        case 'Q':
+                            for(int ex = x-1, ey = y-1; ex >= 0 && ey >= 0; ex--, ey--)
+                                if(operateMove.apply(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]))) {
+                                    if(branchability.getAsBoolean()) {  
+                                        temp = branch(branches + 1, game);
                                         game.undoMove();
                                         if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                             eval = temp;
                                     }
-                                    else break;
-                                for(int ex = x-1, ey = y+1; ex >= 0 && ey < 8; ex--, ey++)
-                                    if(operateMove.apply(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]))) {
-                                        temp = branch(branches - 1, game);
+                                    else
+                                        game.undoMove();
+                                }
+                                else break;
+                            for(int ex = x-1, ey = y+1; ex >= 0 && ey < 8; ex--, ey++)
+                                if(operateMove.apply(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]))) {
+                                    if(branchability.getAsBoolean()) {  
+                                        temp = branch(branches + 1, game);
                                         game.undoMove();
                                         if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                             eval = temp;
                                     }
-                                    else break;
-                                for(int ex = x+1, ey = y-1; ex < 8 && ey >= 0; ex++, ey--)
-                                    if(operateMove.apply(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]))) {
-                                        temp = branch(branches - 1, game);
+                                    else
+                                        game.undoMove();
+                                }
+                                else break;
+                            for(int ex = x+1, ey = y-1; ex < 8 && ey >= 0; ex++, ey--)
+                                if(operateMove.apply(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]))) {
+                                    if(branchability.getAsBoolean()) {  
+                                        temp = branch(branches + 1, game);
                                         game.undoMove();
                                         if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                             eval = temp;
                                     }
-                                    else break;
-                                for(int ex = x+1, ey = y+1; ex < 8 && ey < 8; ex++, ey++)
-                                    if(operateMove.apply(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]))) {
-                                        temp = branch(branches - 1, game);
+                                    else
+                                        game.undoMove();
+                                }
+                                else break;
+                            for(int ex = x+1, ey = y+1; ex < 8 && ey < 8; ex++, ey++)
+                                if(operateMove.apply(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]))) {
+                                    if(branchability.getAsBoolean()) {  
+                                        temp = branch(branches + 1, game);
                                         game.undoMove();
                                         if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                             eval = temp;
                                     }
-                                    else break;
-                                for(int ex = x-1; ex >= 0; ex--)
-                                    if(operateMove.apply(new Move(x, ex, y, y, game.board[x][y], game.board[ex][y]))) {
-                                        temp = branch(branches - 1, game);
+                                    else
+                                        game.undoMove();
+                                }
+                                else break;
+                            for(int ex = x-1; ex >= 0; ex--)
+                                if(operateMove.apply(new Move(x, ex, y, y, game.board[x][y], game.board[ex][y]))) {
+                                    if(branchability.getAsBoolean()) {  
+                                        temp = branch(branches + 1, game);
                                         game.undoMove();
                                         if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                             eval = temp;
                                     }
-                                    else break;
-                                for(int ex = x+1; ex < 8; ex++)
-                                    if(operateMove.apply(new Move(x, ex, y, y, game.board[x][y], game.board[ex][y]))) {
-                                        temp = branch(branches - 1, game);
+                                    else
+                                        game.undoMove();
+                                }
+                                else break;
+                            for(int ex = x+1; ex < 8; ex++)
+                                if(operateMove.apply(new Move(x, ex, y, y, game.board[x][y], game.board[ex][y]))) {
+                                    if(branchability.getAsBoolean()) {  
+                                        temp = branch(branches + 1, game);
                                         game.undoMove();
                                         if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                             eval = temp;
                                     }
-                                    else break;
-                                for(int ey = y-1; ey >= 0; ey--)
-                                    if(operateMove.apply(new Move(x, x, y, ey, game.board[x][y], game.board[x][ey]))) {
-                                        temp = branch(branches - 1, game);
+                                    else
+                                        game.undoMove();
+                                }
+                                else break;
+                            for(int ey = y-1; ey >= 0; ey--)
+                                if(operateMove.apply(new Move(x, x, y, ey, game.board[x][y], game.board[x][ey]))) {
+                                    if(branchability.getAsBoolean()) {  
+                                        temp = branch(branches + 1, game);
                                         game.undoMove();
                                         if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                             eval = temp;
                                     }
-                                    else break;
-                                for(int ey = y+1; ey < 8; ey++)
-                                    if(operateMove.apply(new Move(x, x, y, ey, game.board[x][y], game.board[x][ey]))) {
-                                        temp = branch(branches - 1, game);
+                                    else
+                                        game.undoMove();
+                                }
+                                else break;
+                            for(int ey = y+1; ey < 8; ey++)
+                                if(operateMove.apply(new Move(x, x, y, ey, game.board[x][y], game.board[x][ey]))) {
+                                    if(branchability.getAsBoolean()) {  
+                                        temp = branch(branches + 1, game);
                                         game.undoMove();
                                         if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
                                             eval = temp;
                                     }
-                                    else break;
-                                break;
-                            case 'K':
-                                if(x > 0 && y > 0 && operateMove.apply(new Move(x, x-1, y, y-1, game.board[x][y], game.board[x-1][y-1]))) {
-                                        temp = branch(branches - 1, game);
+                                    else
                                         game.undoMove();
-                                        if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
-                                            eval = temp;
-                                    }
-                                if(x > 0 && y > 0 && operateMove.apply(new Move(x, x-1, y, y, game.board[x][y], game.board[x-1][y]))) {
-                                        temp = branch(branches - 1, game);
-                                        game.undoMove();
-                                        if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
-                                            eval = temp;
-                                    }
-                                if(x > 0 && y < 7 && operateMove.apply(new Move(x, x-1, y, y+1, game.board[x][y], game.board[x-1][y+1]))) {
-                                        temp = branch(branches - 1, game);
-                                        game.undoMove();
-                                        if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
-                                            eval = temp;
-                                    }
-                                if(y > 0 && operateMove.apply(new Move(x, x, y, y-1, game.board[x][y], game.board[x][y-1]))) {
-                                        temp = branch(branches - 1, game);
-                                        game.undoMove();
-                                        if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
-                                            eval = temp;
-                                    }
-                                if(y < 7 && operateMove.apply(new Move(x, x, y, y+1, game.board[x][y], game.board[x][y+1]))) {
-                                        temp = branch(branches - 1, game);
-                                        game.undoMove();
-                                        if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
-                                            eval = temp;
-                                    }
-                                if(x < 7 && y > 0 && operateMove.apply(new Move(x, x+1, y, y-1, game.board[x][y], game.board[x+1][y-1]))) {
-                                        temp = branch(branches - 1, game);
-                                        game.undoMove();
-                                        if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
-                                            eval = temp;
-                                    }
-                                if(x < 7 && operateMove.apply(new Move(x, x+1, y, y, game.board[x][y], game.board[x+1][y]))) {
-                                        temp = branch(branches - 1, game);
-                                        game.undoMove();
-                                        if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
-                                            eval = temp;
-                                    }
-                                if(x < 7 && y < 7 && operateMove.apply(new Move(x, x+1, y, y+1, game.board[x][y], game.board[x+1][y+1]))) {
-                                        temp = branch(branches - 1, game);
-                                        game.undoMove();
-                                        if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
-                                            eval = temp;
-                                    }
-                                if(x == 4 && operateMove.apply(new Move(x, x+2, y, y, game.board[x][y], game.board[x+2][y]))) {
-                                        temp = branch(branches - 1, game);
-                                        game.undoMove();
-                                        if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
-                                            eval = temp;
-                                    }
-                                if(x == 4 && operateMove.apply(new Move(x, x-2, y, y, game.board[x][y], game.board[x-2][y]))) {
-                                        temp = branch(branches - 1, game);
-                                        game.undoMove();
-                                        if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
-                                            eval = temp;
-                                    }
-                                break;
-                            default: System.out.print("Error."); //should never happen
-                        }
+                                }
+                                else break;
+                            break;
+                        case 'K':
+                            if(x > 0 && y > 0 && operateMove.apply(new Move(x, x-1, y, y-1, game.board[x][y], game.board[x-1][y-1]))) {
+                                if(branchability.getAsBoolean()) {  
+                                    temp = branch(branches + 1, game);
+                                    game.undoMove();
+                                    if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
+                                        eval = temp;
+                                }
+                                else
+                                    game.undoMove();
+                                }
+                            if(x > 0 && y > 0 && operateMove.apply(new Move(x, x-1, y, y, game.board[x][y], game.board[x-1][y]))) {
+                                if(branchability.getAsBoolean()) {  
+                                    temp = branch(branches + 1, game);
+                                    game.undoMove();
+                                    if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
+                                        eval = temp;
+                                }
+                                else
+                                    game.undoMove();
+                                }
+                            if(x > 0 && y < 7 && operateMove.apply(new Move(x, x-1, y, y+1, game.board[x][y], game.board[x-1][y+1]))) {
+                                if(branchability.getAsBoolean()) {  
+                                    temp = branch(branches + 1, game);
+                                    game.undoMove();
+                                    if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
+                                        eval = temp;
+                                }
+                                else
+                                    game.undoMove();
+                                }
+                            if(y > 0 && operateMove.apply(new Move(x, x, y, y-1, game.board[x][y], game.board[x][y-1]))) {
+                                if(branchability.getAsBoolean()) {  
+                                    temp = branch(branches + 1, game);
+                                    game.undoMove();
+                                    if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
+                                        eval = temp;
+                                }
+                                else
+                                    game.undoMove();
+                                }
+                            if(y < 7 && operateMove.apply(new Move(x, x, y, y+1, game.board[x][y], game.board[x][y+1]))) {
+                                if(branchability.getAsBoolean()) {  
+                                    temp = branch(branches + 1, game);
+                                    game.undoMove();
+                                    if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
+                                        eval = temp;
+                                }
+                                else
+                                    game.undoMove();
+                                }
+                            if(x < 7 && y > 0 && operateMove.apply(new Move(x, x+1, y, y-1, game.board[x][y], game.board[x+1][y-1]))) {
+                                if(branchability.getAsBoolean()) {  
+                                    temp = branch(branches + 1, game);
+                                    game.undoMove();
+                                    if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
+                                        eval = temp;
+                                }
+                                else
+                                    game.undoMove();
+                                }
+                            if(x < 7 && operateMove.apply(new Move(x, x+1, y, y, game.board[x][y], game.board[x+1][y]))) {
+                                if(branchability.getAsBoolean()) {  
+                                    temp = branch(branches + 1, game);
+                                    game.undoMove();
+                                    if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
+                                        eval = temp;
+                                }
+                                else
+                                    game.undoMove();
+                                }
+                            if(x < 7 && y < 7 && operateMove.apply(new Move(x, x+1, y, y+1, game.board[x][y], game.board[x+1][y+1]))) {
+                                if(branchability.getAsBoolean()) {  
+                                    temp = branch(branches + 1, game);
+                                    game.undoMove();
+                                    if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
+                                        eval = temp;
+                                }
+                                else
+                                    game.undoMove();
+                                }
+                            if(x == 4 && operateMove.apply(new Move(x, x+2, y, y, game.board[x][y], game.board[x+2][y]))) {
+                                if(branchability.getAsBoolean()) {  
+                                    temp = branch(branches + 1, game);
+                                    game.undoMove();
+                                    if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
+                                        eval = temp;
+                                }
+                                else
+                                    game.undoMove();
+                                }
+                            if(x == 4 && operateMove.apply(new Move(x, x-2, y, y, game.board[x][y], game.board[x-2][y]))) {
+                                if(branchability.getAsBoolean()) {  
+                                    temp = branch(branches + 1, game);
+                                    game.undoMove();
+                                    if(temp > (game.turnCount % 2 == 0 ? eval : -eval) || eval == 1.675e-27)
+                                        eval = temp;
+                                }
+                                else
+                                    game.undoMove();
+                                }
+                            break;
+                        default: System.out.print("Error."); //should never happen
                     }
                 }
             }
-            score = eval;
         }
-        
-        return score;
+        return (eval != 1.675e-27 ? eval : score);
     }
 }
