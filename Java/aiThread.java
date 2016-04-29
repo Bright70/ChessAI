@@ -6,7 +6,7 @@
 package chessai;
 
 //threading
-public class aiThread implements Runnable {
+public class aiThread extends Thread {
     //variables
     private int arrPos;
     private Board game;
@@ -37,7 +37,6 @@ public class aiThread implements Runnable {
     //evaluate position, return score
     double evaluate(Board game) {
         double score = 0; //positive means advantage for white
-
 
         //piece value and mobility bonus
         double[] pieceBonus = new double[2]; //0 = white, 1 = black
@@ -324,7 +323,10 @@ public class aiThread implements Runnable {
         double score = evaluate(game);
         int color = game.turnCount % 2 == 0 ? 1 : -1;
 
-        System.out.println("Thread " + arrPos + " @ branch " + branches);
+        // when user is able to input depth, will use number so that it always works without having to change the code
+        //this.setPriority((branches < 20 ? (MIN_PRIORITY + branches)/2 : 10)); // setting thread priority relative to depth
+
+        //System.out.println("Thread " + arrPos + " @ branch " + branches);
         
         //lambda for next block
         java.util.function.Function<Move, Boolean> operateMove = (m) -> {
@@ -335,7 +337,7 @@ public class aiThread implements Runnable {
             else return false;
         };
 
-        java.util.function.BooleanSupplier branchability = () -> (evaluate(game) - score) * (300.0 / ((double)branches-0.9) - 25.0) * (game.turnCount % 2 == 1 ? 1 : -1) > 30;
+        java.util.function.BooleanSupplier branchability = () -> (evaluate(game) - score) * (300.0 / ((double)branches-0.9) - 20.0) * (game.turnCount % 2 == 1 ? 1 : -1) > 30;
 
         double temp, eval = 1.675e-27;
         //find all legal moves

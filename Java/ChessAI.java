@@ -29,6 +29,7 @@ public class ChessAI {
     //choose a move by evaulating multiple positions with threads
     public Move aiMakeMove(Board game) {
         //vars
+        long startTime = System.currentTimeMillis();
         int possibleMoves = 0, color = game.turnCount % 2 == 0 ? 1 : -1;
         Move[] moves = new Move[64];
         
@@ -188,12 +189,13 @@ public class ChessAI {
         //wait until threads are done
 
         while(true) {
+            sleep(1000);
             int dead = 0;
             for(int x = 0; x < possibleMoves; x++)
                 if(threadDead[x]) {
                     dead++;
                     if(!deadThread[x]) {
-                        System.out.println("Thread " + x + " dead");
+                        System.out.println("Thread " + x + " ended");
                         deadThread[x] = true;
                     }
                 }
@@ -207,8 +209,14 @@ public class ChessAI {
         //quicksort moves based on score
         quickSort(scores, nMoves, 0, possibleMoves - 1);
 
-        System.out.print("\nComputer evaluation: " + scores[(game.turnCount % 2 == 0 ? possibleMoves : 0)]);
+        System.out.println("Computer evaluation: " + scores[(game.turnCount % 2 == 0 ? possibleMoves : 0)]);
+        System.out.println("Computation took " + (float)(System.currentTimeMillis() - startTime) / 1000.0 + "s");
         return nMoves[(game.turnCount % 2 == 0 ? possibleMoves : 0)];
+    }
+
+    private void sleep(int time){
+        long startTime = System.currentTimeMillis();
+        while(System.currentTimeMillis() - startTime < time);
     }
     
     //quicksort moves for aiMakeMove. last move should be the best for white
