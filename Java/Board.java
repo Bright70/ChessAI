@@ -231,25 +231,25 @@ public final class Board {
         //find the king
     	for(int x = 0; x < 8; x++) {
             for(int y = 0; y < 8; y++) {
-                if(board[x][y].name == 'K' && 
-                        isInCheck(turnCount % 2 == 0 ? Color.WHITE : Color.BLACK) &&
-                        board[x][y].color == (turnCount % 2 == 0 ? Color.WHITE : Color.BLACK)){
+                if(board[x][y].name == 'K' && isInCheck(turnCount % 2 == 0 ? Color.WHITE : Color.BLACK) && board[x][y].color == (turnCount % 2 == 0 ? Color.WHITE : Color.BLACK)){
                     // check 3x3 square surrounding king to see if any legal moves remain
+                    int illegalPosCount = 0;
                     for(int ex = x - 1; ex < x + 2; ex++) {
                         for(int ey = y - 1; ey < y + 2; ey++) {
                             if(ex >= 0 && ex < 8 && ey >= 0 && ey < 8) { // prevents arrayOutOfBounds
                                 if(isLegal(new Move(x, ex, y, ey, board[x][y], board[ex][ey]), true)) {
-                                    return false; // if any legal move is found, not checkmate
+                                    illegalPosCount++;
                                 }
                             }
                         }
                     }
-                    x = 8;
+                    if(illegalPosCount == 9)
+                        return true;
                     break;
                 }
             }
     	}
-    	return true;
+    	return false;
     }
     
     //check for king in check

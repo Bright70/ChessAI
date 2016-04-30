@@ -324,9 +324,15 @@ public class aiThread extends Thread {
         int color = game.turnCount % 2 == 0 ? 1 : -1;
 
         // when user is able to input depth, will use number so that it always works without having to change the code
-        //this.setPriority((branches < 20 ? (MIN_PRIORITY + branches)/2 : 10)); // setting thread priority relative to depth
+        this.setPriority((branches < 20 ? (MIN_PRIORITY + branches)/2 : 10)); // setting thread priority relative to depth
 
-        //System.out.println("Thread " + arrPos + " @ branch " + branches);
+        if(game.checkmated()){
+            System.out.println("Checkmate @ depth " + branches);
+            return (game.turnCount % 2 == 0 ? 50 : -50);
+        }
+
+        //if(branches > 12)
+        //    System.out.println("Thread " + arrPos + " @ branch " + branches);
         
         //lambda for next block
         java.util.function.Function<Move, Boolean> operateMove = (m) -> {
@@ -337,7 +343,7 @@ public class aiThread extends Thread {
             else return false;
         };
 
-        java.util.function.BooleanSupplier branchability = () -> (evaluate(game) - score) * (300.0 / ((double)branches-0.9) - 20.0) * (game.turnCount % 2 == 1 ? 1 : -1) > 30;
+        java.util.function.BooleanSupplier branchability = () -> (evaluate(game) - score) * (300.0 / ((double)branches-0.9) - 25.0) * (game.turnCount % 2 == 1 ? 1 : -1) > 30;
 
         double temp, eval = 1.675e-27;
         //find all legal moves

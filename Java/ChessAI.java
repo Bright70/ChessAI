@@ -179,8 +179,7 @@ public class ChessAI {
         System.arraycopy(moves, 0, nMoves, 0, possibleMoves);
         scores = new double[possibleMoves];
         threadDead = new boolean[possibleMoves];
-        boolean[] deadThread = new boolean[possibleMoves];
-        
+
         //evaluate positions
         ExecutorService threadPool = Executors.newCachedThreadPool();
         for(int i = 0; i < possibleMoves; i++)
@@ -192,14 +191,11 @@ public class ChessAI {
             sleep(1000);
             int dead = 0;
             for(int x = 0; x < possibleMoves; x++)
-                if(threadDead[x]) {
+                if(!threadDead[x]) {
                     dead++;
-                    if(!deadThread[x]) {
-                        System.out.println("Thread " + x + " ended");
-                        deadThread[x] = true;
-                    }
+                    System.out.println("Thread " + x + " still running");
                 }
-            if(dead == possibleMoves){
+            if(dead == 0){
                 threadPool.shutdown();
                 System.out.println("AI played");
                 break;
