@@ -7,6 +7,14 @@ package chessai;
 
 //threading
 public class aiThread extends Thread {
+    //heuristic constants
+    private static final double[] SCOREWEIGHT = { //evaluate
+        0.8,    //piece value + mobility
+        0.125,  //space bonus
+        0.4     //king safety
+    };
+    private static final double LIFETIME = 300, DROPOFF = 25, THRESHOLD = 30; //branching
+
     //variables
     private int arrPos;
     private Board game;
@@ -26,6 +34,7 @@ public class aiThread extends Thread {
         this.game.makeMove(move);
     }
     
+    //threading
     @Override
     public void run() {
 //        System.out.println("Thread:" + arrPos);
@@ -36,7 +45,7 @@ public class aiThread extends Thread {
     
     //evaluate position, return score
     double evaluate(Board game) {
-        double score = 0; //positive means advantage for white
+        double score = 0; //positive is advantage for white
 
         //piece value and mobility bonus
         double[] pieceBonus = new double[2]; //0 = white, 1 = black
@@ -199,7 +208,7 @@ public class aiThread extends Thread {
             }
         }
         //add to score
-        score += (pieceBonus[0] - pieceBonus[1]) * 0.8;
+        score += (pieceBonus[0] - pieceBonus[1]) * SCOREWEIGHT[0];
         
         //space bonus
         int[] spaceBonus = new int[2]; //0 = white, 1 = black
@@ -222,10 +231,10 @@ public class aiThread extends Thread {
                     break;
                 }
         //add to score
-        if(spaceBonus[0] != 0 || spaceBonus[1] != 0)
+        if(spaceBonus[0] != 0 && spaceBonus[1] != 0)
             score += ((double)(spaceBonus[0] - spaceBonus[1]) / 
-                    (spaceBonus[0] > spaceBonus[1] ? spaceBonus[0] : spaceBonus[1]));
-        else score += (double)(spaceBonus[0] > spaceBonus[1] ? spaceBonus[0] : -spaceBonus[1]) / 8;
+                    (spaceBonus[0] > spaceBonus[1] ? spaceBonus[0] : spaceBonus[1]) * SCOREWEIGHT[1]);
+        else score += (double)(spaceBonus[0] > spaceBonus[1] ? spaceBonus[0] : -spaceBonus[1]) * SCOREWEIGHT[1];
         
         //king safety bonus
         double[] kingSafetyBonus = new double[2]; //0 white, 1 black
@@ -312,27 +321,26 @@ public class aiThread extends Thread {
                     break;
                 }
         //add to score
-        score += 0.4 * (kingSafetyBonus[0] - kingSafetyBonus[1]);
+        score += (kingSafetyBonus[0] - kingSafetyBonus[1]) * SCOREWEIGHT[2];
         
         //check other stuff
+        
         return score;
     }
     
     //branching game tree, currently static: pass number of branches
     double branch(int branches, Board game) {
+        //vars
         double score = evaluate(game);
         int color = game.turnCount % 2 == 0 ? 1 : -1;
 
-        // when user is able to input depth, will use number so that it always works without having to change the code
-        this.setPriority((branches < 20 ? (MIN_PRIORITY + branches)/2 : 10)); // setting thread priority relative to depth
+        //when user is able to input depth, will use number so that it always works without having to change the code
+        this.setPriority((branches < 20 ? (MIN_PRIORITY + branches) / 2 : 10)); // setting thread priority relative to depth
 
         if(game.checkmated()){
             System.out.println("Checkmate @ depth " + branches);
             return (game.turnCount % 2 == 0 ? 50 : -50);
         }
-
-        //if(branches > 12)
-        //    System.out.println("Thread " + arrPos + " @ branch " + branches);
         
         //lambda for next block
         java.util.function.Function<Move, Boolean> operateMove = (m) -> {
@@ -343,7 +351,8 @@ public class aiThread extends Thread {
             else return false;
         };
 
-        java.util.function.BooleanSupplier branchability = () -> (evaluate(game) - score) * (300.0 / ((double)branches-0.9) - 25.0) * (game.turnCount % 2 == 1 ? 1 : -1) > 30;
+        java.util.function.BooleanSupplier branchability = () -> 
+                 (evaluate(game) - score) * (LIFETIME / ((double)branches-0.9) - DROPOFF) * (game.turnCount % 2 == 1 ? 1 : -1) > THRESHOLD;
 
         double temp, eval = 1.675e-27;
         //find all legal moves
