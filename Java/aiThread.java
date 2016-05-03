@@ -13,11 +13,14 @@ public class aiThread extends Thread {
         0.125,  //space bonus
         0.4     //king safety
     };
-    private static final double LIFETIME = 300, DROPOFF = 25, THRESHOLD = 30; //branching
+    private static final double LIFETIME = 150, DROPOFF = 5, THRESHOLD = 30, TIMEOUT = 120; //branching
 
     //variables
     private int arrPos;
     private Board game;
+    private int depth;
+    private int badBranches = 2;
+    private int startTime;
     
     //initializer given move index and board
     aiThread(int arrPos, Board game, Move move) {
@@ -32,15 +35,15 @@ public class aiThread extends Thread {
         }
         System.arraycopy(game.moves, 0, this.game.moves, 0, this.game.turnCount);
         this.game.makeMove(move);
+        startTime = (int)(System.currentTimeMillis() /1000);
     }
     
     //threading
     @Override
     public void run() {
-//        System.out.println("Thread:" + arrPos);
         ChessAI.scores[arrPos] = branch(1, game);
         ChessAI.threadDead[arrPos] = true;
-//        System.out.println("Thread " + arrPos + " finished with score " + ChessAI.scores[arrPos]);
+        System.out.println("Thread " + arrPos + " ended @ depth " + depth);
     }
     
     //evaluate position, return score
@@ -334,14 +337,21 @@ public class aiThread extends Thread {
         double score = evaluate(game);
         int color = game.turnCount % 2 == 0 ? 1 : -1;
 
+        depth = branches;
+
+        if((System.currentTimeMillis() / 1000) - startTime > TIMEOUT){
+            System.out.println("Timeout");
+            return score;
+        }
+
         //when user is able to input depth, will use number so that it always works without having to change the code
         this.setPriority((branches < 20 ? (MIN_PRIORITY + branches) / 2 : 10)); // setting thread priority relative to depth
 
         if(game.checkmated()){
             System.out.println("Checkmate @ depth " + branches);
-            return (game.turnCount % 2 == 0 ? 50 : -50);
+            return (game.turnCount % 2 == 0 ? -50 : 50);
         }
-        
+
         //lambda for next block
         java.util.function.Function<Move, Boolean> operateMove = (m) -> {
             if(game.isLegal(m, true)) {
@@ -351,8 +361,8 @@ public class aiThread extends Thread {
             else return false;
         };
 
-        java.util.function.BooleanSupplier branchability = () -> 
-                 (evaluate(game) - score) * (LIFETIME / ((double)branches-0.9) - DROPOFF) * (game.turnCount % 2 == 1 ? 1 : -1) > THRESHOLD;
+        java.util.function.BooleanSupplier branchability = () ->
+                 (evaluate(game) - score) * (LIFETIME / ((double)branches-0.9) - DROPOFF) * (game.turnCount % 2 == 1 ? 1 : -1) > THRESHOLD || (score * (game.turnCount % 2 == 1 ? -1 : 1) < -0.5 && badBranches-- > 0);
 
         double temp, eval = 1.675e-27;
         //find all legal moves

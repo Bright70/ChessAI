@@ -237,7 +237,7 @@ public final class Board {
                     for(int ex = x - 1; ex < x + 2; ex++) {
                         for(int ey = y - 1; ey < y + 2; ey++) {
                             if(ex >= 0 && ex < 8 && ey >= 0 && ey < 8) { // prevents arrayOutOfBounds
-                                if(isLegal(new Move(x, ex, y, ey, board[x][y], board[ex][ey]), true)) {
+                                if(!isLegal(new Move(x, ex, y, ey, board[x][y], board[ex][ey]), true)) {
                                     illegalPosCount++;
                                 }
                             }
@@ -390,7 +390,7 @@ public final class Board {
                             break;
                         default:
                             board[m.sx][m.sy] = new Queen(color);
-                            System.out.println("Default piece created");
+                            //System.out.println("Default piece created");
                             break;
                     }
                     chessMain.in.nextLine();

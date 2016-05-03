@@ -31,7 +31,7 @@ public class ChessAI {
         //vars
         long startTime = System.currentTimeMillis();
         int possibleMoves = 0, color = game.turnCount % 2 == 0 ? 1 : -1;
-        Move[] moves = new Move[64];
+        Move[] moves = new Move[128];
         
         //lambda for next block
         java.util.function.BiFunction<Move, Integer, Boolean> operateMove = (m, i) -> {
@@ -191,15 +191,15 @@ public class ChessAI {
             sleep(1000);
             int dead = 0;
             for(int x = 0; x < possibleMoves; x++)
-                if(!threadDead[x]) {
+                if(threadDead[x]) {
                     dead++;
-                    System.out.println("Thread " + x + " still running");
                 }
-            if(dead == 0){
+            if(dead == possibleMoves){
                 threadPool.shutdown();
                 System.out.println("AI played");
                 break;
             }
+            System.out.println((possibleMoves - dead) + " threads live");
         }
 
         //quicksort moves based on score
@@ -244,5 +244,4 @@ public class ChessAI {
         if (i < right)
             quickSort(scores, moves, i, right);
     }
-    
 }
