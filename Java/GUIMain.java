@@ -111,6 +111,7 @@ public class GUIMain extends Application{
     private BorderPane layout = new BorderPane();
     private Scene scene = new Scene(layout, width, height);
     private int sx, sy, ex, ey;
+    public static boolean checkmate;
 
     private BoardUI[][] boardUI = new BoardUI[8][8];
 
@@ -131,7 +132,12 @@ public class GUIMain extends Application{
                 if (board.isLegal(move, true)){
                     board.makeMove(move);
                     System.out.println("Move is legal");
-                    board.makeMove(ai.aiMakeMove(board));
+                    Move aiMove = ai.aiMakeMove(board);
+                    if(aiMove == null)
+                        checkmate = true;
+                    else
+                        board.makeMove(aiMove);
+
                 }
                 else
                     System.out.println("Move is illegal");
@@ -164,7 +170,11 @@ public class GUIMain extends Application{
                     if (board.isLegal(move, true)){
                         board.makeMove(move);
                         System.out.println("Move is legal");
-                        board.makeMove(ai.aiMakeMove(board));
+                        Move aiMove = ai.aiMakeMove(board);
+                        if(aiMove == null)
+                            checkmate = true;
+                        else
+                            board.makeMove(aiMove);
                     }
                     else
                         System.out.println("Move is illegal");
@@ -183,6 +193,8 @@ public class GUIMain extends Application{
                 event.consume();
             });
             boardUI[x][y].pieceView.setOnDragDetected(event -> { // lambda :D
+                if(checkmate)
+                    return;
                 sx = (int)((event.getSceneX() - 75) /75);
                 sy = (int)((event.getSceneY() - 75) /75);
                 System.out.println("sx: " + sx + " sy: " + sy);

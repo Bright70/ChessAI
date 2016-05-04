@@ -174,6 +174,14 @@ public class ChessAI {
                 }
             }
         }
+
+        if(possibleMoves == 0){ // checkmate or stalemate
+            if(game.isInCheck(game.turnCount % 2 == 0 ? Color.WHITE : Color.BLACK))
+                System.out.println("Checkmate");
+            else
+                System.out.println("Stalemate");
+            return null;
+        }
         
         Move[] nMoves = new Move[possibleMoves];
         System.arraycopy(moves, 0, nMoves, 0, possibleMoves);
@@ -216,7 +224,7 @@ public class ChessAI {
     }
     
     //quicksort moves for aiMakeMove. last move should be the best for white
-    public void quickSort(double[] scores, Move[] moves, int left, int right)
+    private void quickSort(double[] scores, Move[] moves, int left, int right)
     {
         double temp; Move mTemp;
         double pivot = scores[(left + right) / 2];
