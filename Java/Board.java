@@ -393,7 +393,7 @@ public final class Board {
                             //System.out.println("Default piece created");
                             break;
                     }
-                    chessMain.in.nextLine();
+                    //chessMain.in.nextLine();
                 }   break;
             default:
                 break;
