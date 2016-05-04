@@ -13,7 +13,7 @@ public class aiThread extends Thread {
         0.125,  //space bonus
         0.4     //king safety
     };
-    private static final double LIFETIME = 150, DROPOFF = 8, THRESHOLD = 30; private static int TIMEOUT = 120; //branching
+    private static final double LIFETIME = 250, DROPOFF = 11, THRESHOLD = 30; private static int TIMEOUT = 120; //branching
 
     //variables
     private int arrPos;
@@ -44,7 +44,8 @@ public class aiThread extends Thread {
     public void run() {
         ChessAI.scores[arrPos] = branch(1, game);
         ChessAI.threadDead[arrPos] = true;
-        System.out.println("Thread " + arrPos + " ended @ depth " + depth + " with score " + score);
+        if(ChessAI.debug)
+            System.out.println("Thread " + arrPos + " ended @ depth " + depth + " with score " + score);
     }
     
     //evaluate position, return score
@@ -53,7 +54,7 @@ public class aiThread extends Thread {
 
         //piece value and mobility bonus
         double[] pieceBonus = new double[2]; //0 = white, 1 = black
-        int turnCount = game.turnCount, legalMoves = 0;
+        int turnCount = game.turnCount, legalMoves = 0; possibleMoves = 0;
         double bonus;
         Piece p;
         for(int x = 0; x < 8; x++) {
@@ -75,9 +76,9 @@ public class aiThread extends Thread {
                         case 'P': 
                             if(y < 7 && y > 1 && game.isLegal(new Move(x, x, y, y-(turnCount%2==0?1:-1), game.board[x][y], game.board[x][y-(turnCount%2==0?1:-1)]), true))
                                 legalMoves++;
-                            if(y != (turnCount%2==0?1:6) && game.isLegal(new Move(x, x, y, y-(turnCount%2==0?2:-2), game.board[x][y], game.board[x][y-2*(turnCount%2==0?1:-1)]), true))
+                            if(y == (turnCount%2==0?6:1) && game.isLegal(new Move(x, x, y, y-(turnCount%2==0?2:-2), game.board[x][y], game.board[x][y-(turnCount%2==0?2:-2)]), true))
                                 legalMoves++;
-                            if(x > 0 && game.isLegal(new Move(x, x-1, y, y-(turnCount%2==0?1:-1), game.board[x][y], game.board[x-1][y-(turnCount%2==0?1:-1)]), true))
+                            if(x > 0 && x < 7 && game.isLegal(new Move(x, x-1, y, y-(turnCount%2==0?1:-1), game.board[x][y], game.board[x-1][y-(turnCount%2==0?1:-1)]), true))
                                 legalMoves++;
                             if(x < 7 && game.isLegal(new Move(x, x+1, y, y-(turnCount%2==0?1:-1), game.board[x][y], game.board[x+1][y-(turnCount%2==0?1:-1)]), true))
                                 legalMoves++;
@@ -363,7 +364,7 @@ public class aiThread extends Thread {
             }
             else{
                 System.out.println("Stalemate @ depth " + branches);
-                return (game.turnCount % 2 == 0 ? ((score < 0) ? 10 : -10) : ((score < 0) ? -10 : 10));
+                return (game.turnCount % 2 == 0 ? ((score < 0) ? -10 : 10) : ((score < 0) ? 10 : -10));
             }
         }
 
@@ -376,8 +377,12 @@ public class aiThread extends Thread {
             else return false;
         };
 
-        java.util.function.BooleanSupplier branchability = () ->
-                 (evaluate(game) - score) * (LIFETIME / ((double)branches-0.9) - DROPOFF) * (game.turnCount % 2 == 1 ? 1 : -1) > THRESHOLD;
+        java.util.function.BooleanSupplier branchability = () -> {
+            if(evaluate(game) - score > -1)
+                return Math.abs(evaluate(game) - score) * (LIFETIME / ((double) branches - 0.9) - DROPOFF) * (game.turnCount % 2 == 1 ? 1 : -1) > THRESHOLD;
+            else
+                return (evaluate(game) - score) * (LIFETIME / ((double) branches - 0.9) - DROPOFF) * (game.turnCount % 2 == 1 ? 1 : -1) > THRESHOLD;
+        };
 
         double temp, eval = 1.675e-27;
         //find all legal moves

@@ -12,6 +12,7 @@
 
 package chessai;
 
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -20,10 +21,13 @@ public class ChessAI {
     //variables
     static double[] scores;
     static boolean[] threadDead;
+    static private double THRESHOLD = 0.5;
+    private Random rand = new Random();
+    public static boolean debug;
 
     //initialize vars
-    public ChessAI() {
-        
+    public ChessAI(boolean debug) {
+        ChessAI.debug = debug;
     }
 
     //choose a move by evaulating multiple positions with threads
@@ -177,9 +181,9 @@ public class ChessAI {
 
         if(possibleMoves == 0){ // checkmate or stalemate
             if(game.isInCheck(game.turnCount % 2 == 0 ? Color.WHITE : Color.BLACK))
-                System.out.println("Checkmate");
+                System.out.println((game.turnCount % 2 == 0 ? "Black" : "White") + "Checkmate");
             else
-                System.out.println("Stalemate");
+                System.out.println((game.turnCount % 2 == 0 ? "Black" : "White") + "Stalemate");
             return null;
         }
         
@@ -204,18 +208,36 @@ public class ChessAI {
                 }
             if(dead == possibleMoves){
                 threadPool.shutdown();
-                System.out.println("AI played");
+                if(debug)
+                    System.out.println("AI played");
                 break;
             }
-            System.out.println((possibleMoves - dead) + " threads live");
+            if(debug)
+                System.out.println((possibleMoves - dead) + " threads live");
         }
 
         //quicksort moves based on score
         quickSort(scores, nMoves, 0, possibleMoves - 1);
 
-        System.out.println("Computer evaluation: " + scores[(game.turnCount % 2 == 0 ? possibleMoves : 0)]);
-        System.out.println("Computation took " + (float)(System.currentTimeMillis() - startTime) / 1000.0 + "s");
-        return nMoves[(game.turnCount % 2 == 0 ? possibleMoves : 0)];
+        int topMoves = 0;
+        // randomizer, will pick top 25% of moves best for the current player, and choose one randomly
+        for(int x = (game.turnCount % 2 == 0 ? -possibleMoves : 0); x < (game.turnCount % 2 == 0 ? 0 : possibleMoves -1); x++){
+            if(scores[(game.turnCount % 2 == 0) ? possibleMoves - 1: 0] < scores[(game.turnCount % 2 == 0) ? -x-1 : x] + (game.turnCount % 2 == 0 ? THRESHOLD : -THRESHOLD)){
+                topMoves++;
+            }
+        }
+
+        // choose top 25% of viable moves
+        topMoves /= 4;
+        // choose a random one
+        topMoves = topMoves > 0 ? rand.nextInt(topMoves): 0; // crashed AI
+
+        if(debug) {
+            System.out.println("Computer evaluation: " + scores[(game.turnCount % 2 == 0 ? possibleMoves - 1 : 0)]);
+            System.out.println("Computation took " + (float) (System.currentTimeMillis() - startTime) / 1000.0 + "s");
+        }
+
+        return nMoves[(game.turnCount % 2 == 0 ? possibleMoves - (topMoves + 1) : topMoves)];
     }
 
     private void sleep(int time){

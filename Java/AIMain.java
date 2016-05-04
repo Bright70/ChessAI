@@ -15,10 +15,10 @@ public class AIMain {
         while(true) {
             board = new Board();
             getValues(false);
-            control = new ChessAI();
+            control = new ChessAI(false);
             // modify values
             getValues(true);
-            test = new ChessAI();
+            test = new ChessAI(false);
             boolean checkmate = false;
 
             while (!checkmate) {

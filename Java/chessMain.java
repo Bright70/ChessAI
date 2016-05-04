@@ -13,7 +13,7 @@ public class chessMain {
     public static void main(String[] args) {
         
         //create new game and vars
-        ChessAI ai = new ChessAI();
+        ChessAI ai = new ChessAI(true);
         Board game = new Board();
         String input;
         long start;

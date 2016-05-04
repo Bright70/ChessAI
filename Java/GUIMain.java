@@ -106,7 +106,7 @@ class BoardUI{ // only for visual representation of Board class
 public class GUIMain extends Application{
 
     private Board board = new Board();
-    private ChessAI ai = new ChessAI();
+    private ChessAI ai = new ChessAI(true);
     private int width = 800, height = 800, offset = 75;
     private BorderPane layout = new BorderPane();
     private Scene scene = new Scene(layout, width, height);
