@@ -21,7 +21,7 @@ public class ChessAI {
     //variables
     static double[] scores;
     static boolean[] threadDead;
-    static private double THRESHOLD = 0.5;
+    static private double THRESHOLD = 0.25;
     private Random rand = new Random();
     public static boolean debug;
 
@@ -180,10 +180,10 @@ public class ChessAI {
         }
 
         if(possibleMoves == 0){ // checkmate or stalemate
-            if(game.isInCheck(game.turnCount % 2 == 0 ? Color.WHITE : Color.BLACK))
-                System.out.println((game.turnCount % 2 == 0 ? "Black" : "White") + "Checkmate");
+            if(game.isInCheck(game.turnCount % 2 == 0 ? Color.BLACK : Color.WHITE))
+                System.out.println((game.turnCount % 2 == 0 ? "Black" : "White") + " Checkmate");
             else
-                System.out.println((game.turnCount % 2 == 0 ? "Black" : "White") + "Stalemate");
+                System.out.println((game.turnCount % 2 == 0 ? "Black" : "White") + " Stalemate");
             return null;
         }
         
@@ -240,7 +240,7 @@ public class ChessAI {
         return nMoves[(game.turnCount % 2 == 0 ? possibleMoves - (topMoves + 1) : topMoves)];
     }
 
-    private void sleep(int time){
+    public static void sleep(int time){
         long startTime = System.currentTimeMillis();
         while(System.currentTimeMillis() - startTime < time);
     }

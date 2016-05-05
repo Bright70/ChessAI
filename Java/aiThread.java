@@ -13,15 +13,12 @@ public class aiThread extends Thread {
         0.125,  //space bonus
         0.4     //king safety
     };
-    private static final double LIFETIME = 250, DROPOFF = 11, THRESHOLD = 30; private static int TIMEOUT = 120; //branching
+    private static final double LIFETIME = 150, DROPOFF = 8, THRESHOLD = 30; private static int TIMEOUT = 180; //branching
 
     //variables
-    private int arrPos;
     private Board game;
-    private int depth;
-    private int startTime;
-    int possibleMoves;
-    double score;
+    private int depth, startTime, possibleMoves,  arrPos;
+    private double score, temp, eval = 1.675e-27;
     
     //initializer given move index and board
     aiThread(int arrPos, Board game, Move move) {
@@ -78,9 +75,9 @@ public class aiThread extends Thread {
                                 legalMoves++;
                             if(y == (turnCount%2==0?6:1) && game.isLegal(new Move(x, x, y, y-(turnCount%2==0?2:-2), game.board[x][y], game.board[x][y-(turnCount%2==0?2:-2)]), true))
                                 legalMoves++;
-                            if(x > 0 && x < 7 && game.isLegal(new Move(x, x-1, y, y-(turnCount%2==0?1:-1), game.board[x][y], game.board[x-1][y-(turnCount%2==0?1:-1)]), true))
+                            if(x > 0 && x < 7 && y < 7 && game.isLegal(new Move(x, x-1, y, y-(turnCount%2==0?1:-1), game.board[x][y], game.board[x-1][y-(turnCount%2==0?1:-1)]), true))
                                 legalMoves++;
-                            if(x < 7 && game.isLegal(new Move(x, x+1, y, y-(turnCount%2==0?1:-1), game.board[x][y], game.board[x+1][y-(turnCount%2==0?1:-1)]), true))
+                            if(x < 7 && y < 7 && game.isLegal(new Move(x, x+1, y, y-(turnCount%2==0?1:-1), game.board[x][y], game.board[x+1][y-(turnCount%2==0?1:-1)]), true))
                                 legalMoves++;
                             break;
                         case 'N':
@@ -350,21 +347,25 @@ public class aiThread extends Thread {
         depth = getMax(depth, branches);
 
         if((System.currentTimeMillis() / 1000) - startTime > TIMEOUT){
-            System.out.println("Timeout");
+            if(ChessAI.debug)
+                System.out.println("Timeout"); // if timeout will return non ideal moves
             return score;
         }
 
         //when user is able to input depth, will use number so that it always works without having to change the code
         this.setPriority((branches < 15 ? (int)((MIN_PRIORITY + branches) / 1.5) : 10)); // setting thread priority relative to depth
 
+        if(possibleMoves < 5)
+            System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaa");
+
         if(possibleMoves == 0){
-            if(game.isInCheck(game.turnCount % 2 == 0 ? Color.WHITE : Color.BLACK)){
+            if(game.isInCheck(game.turnCount % 2 == 0 ? Color.BLACK : Color.WHITE)){
                 System.out.println("Checkmate @ depth " + branches);
                 return (game.turnCount % 2 == 0 ? -50 : 50); // needs reviewing
             }
             else{
                 System.out.println("Stalemate @ depth " + branches);
-                return (game.turnCount % 2 == 0 ? ((score < 0) ? -10 : 10) : ((score < 0) ? 10 : -10));
+                return (game.turnCount % 2 == 0 ? ((score < 0) ? 10 : -10) : ((score < 0) ? -10 : 10));
             }
         }
 
@@ -378,13 +379,12 @@ public class aiThread extends Thread {
         };
 
         java.util.function.BooleanSupplier branchability = () -> {
-            if(evaluate(game) - score > -1)
+            if(evaluate(game) - score > -1.0)
                 return Math.abs(evaluate(game) - score) * (LIFETIME / ((double) branches - 0.9) - DROPOFF) * (game.turnCount % 2 == 1 ? 1 : -1) > THRESHOLD;
             else
                 return (evaluate(game) - score) * (LIFETIME / ((double) branches - 0.9) - DROPOFF) * (game.turnCount % 2 == 1 ? 1 : -1) > THRESHOLD;
         };
 
-        double temp, eval = 1.675e-27;
         //find all legal moves
         for(int x = 0; x < 8; x++) {
             for(int y = 0; y < 8; y++) {
@@ -393,7 +393,7 @@ public class aiThread extends Thread {
                     //find all legal moves
                     switch(game.board[x][y].name) {
                         case 'P':
-                            if(operateMove.apply(new Move(x, x, y, y-color, game.board[x][y], game.board[x][y-color]))) {
+                            if((color != -1 || y < 6) && operateMove.apply(new Move(x, x, y, y-color, game.board[x][y], game.board[x][y-color]))) {
                                 //branch further
                                 if(branchability.getAsBoolean()) { 
                                     temp = branch(branches + 1, game);
@@ -405,7 +405,7 @@ public class aiThread extends Thread {
                                 else
                                     game.undoMove();
                             }
-                            if(y != (color > 0 ? 1 : 6) && operateMove.apply(new Move(x, x, y, y-2*color, game.board[x][y], game.board[x][y-2*color]))) {
+                            if(y == (color > 0 ? 6 : 1) && operateMove.apply(new Move(x, x, y, y-2*color, game.board[x][y], game.board[x][y-2*color]))) {
                                 if(branchability.getAsBoolean()) {  
                                     temp = branch(branches + 1, game);
                                     game.undoMove();
@@ -415,7 +415,7 @@ public class aiThread extends Thread {
                                 else
                                     game.undoMove();
                             }
-                            if(x > 0 && operateMove.apply(new Move(x, x-1, y, y-color, game.board[x][y], game.board[x-1][y-color]))) {
+                            if(x > 0 && (color != -1 || y < 6) && operateMove.apply(new Move(x, x-1, y, y-color, game.board[x][y], game.board[x-1][y-color]))) {
                                 if(branchability.getAsBoolean()) {   
                                     temp = branch(branches + 1, game);
                                     game.undoMove();
@@ -425,7 +425,7 @@ public class aiThread extends Thread {
                                 else
                                     game.undoMove();
                             }
-                            if(x < 7 && operateMove.apply(new Move(x, x+1, y, y-color, game.board[x][y], game.board[x+1][y-color]))) {
+                            if(x < 7 && (color != -1 || y < 6) && operateMove.apply(new Move(x, x+1, y, y-color, game.board[x][y], game.board[x+1][y-color]))) {
                                 if(branchability.getAsBoolean()) {  
                                     temp = branch(branches + 1, game);
                                     game.undoMove();

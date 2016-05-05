@@ -21,20 +21,27 @@ public class AIMain {
             test = new ChessAI(false);
             boolean checkmate = false;
 
+            int startTime = (int)System.currentTimeMillis() / 1000;
+
             while (!checkmate) {
                 Move controlMove = control.aiMakeMove(board);
                 if (controlMove == null)
                     checkmate = true;
                 else
                     board.makeMove(controlMove);
+
+                System.out.println("Turn " + board.turnCount);
                 board.displayBoard(board.board);
                 Move testMove = test.aiMakeMove(board);
                 if (testMove == null)
                     checkmate = true;
                 else
                     board.makeMove(testMove);
+                System.out.println("Turn " + board.turnCount);
                 board.displayBoard(board.board);
             }
+
+            System.out.println("Game took " + (double)(((System.currentTimeMillis() / 1000) - startTime) / 3600) + "h");
 
             if (board.turnCount % 2 == 0) { // black checkmated white | control AI won
                 System.out.println("Control AI won");
@@ -44,6 +51,9 @@ public class AIMain {
                 setValues();
                 // modify static values to values used by testing AI
             }
+
+            ChessAI.sleep(10000);
+
         }
     }
 
