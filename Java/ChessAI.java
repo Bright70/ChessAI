@@ -221,21 +221,30 @@ public class ChessAI {
 
         int topMoves = 0;
         // randomizer, will pick top 25% of moves best for the current player, and choose one randomly
-        for(int x = (game.turnCount % 2 == 0 ? -possibleMoves : 0); x < (game.turnCount % 2 == 0 ? 0 : possibleMoves -1); x++){
-            if(scores[(game.turnCount % 2 == 0) ? possibleMoves - 1: 0] < scores[(game.turnCount % 2 == 0) ? -x-1 : x] + (game.turnCount % 2 == 0 ? THRESHOLD : -THRESHOLD)){
-                topMoves++;
-            }
+        /*
+
+        for(int x = 0; x < possibleMoves; x++) {
+            if(game.turnCount % 2 == 0)
+                if(scores[possibleMoves - 1] < scores[x] + THRESHOLD)
+                    topMoves++;
+            if(game.turnCount % 2 == 1)
+                if(scores[0] > scores[x] - THRESHOLD)
+                    topMoves++;
         }
+
 
         // choose top 25% of viable moves
         topMoves /= 4;
         // choose a random one
-        topMoves = topMoves > 0 ? rand.nextInt(topMoves): 0; // crashed AI
-
+        topMoves = topMoves > 0 ? rand.nextInt(topMoves): 0;
+        */
         if(debug) {
-            System.out.println("Computer evaluation: " + scores[(game.turnCount % 2 == 0 ? possibleMoves - 1 : 0)]);
+            System.out.println("Computer evaluation: " + scores[(game.turnCount % 2 == 0 ? possibleMoves - (topMoves + 1) : topMoves)]);
             System.out.println("Computation took " + (float) (System.currentTimeMillis() - startTime) / 1000.0 + "s");
         }
+
+        for(int x = 0; x < possibleMoves; x++)
+            System.out.println(scores[x]);
 
         return nMoves[(game.turnCount % 2 == 0 ? possibleMoves - (topMoves + 1) : topMoves)];
     }

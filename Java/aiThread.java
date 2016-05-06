@@ -9,11 +9,11 @@ package chessai;
 public class aiThread extends Thread {
     //heuristic constants
     private static final double[] SCOREWEIGHT = { //evaluate
-        0.8,    //piece value + mobility
+        1.0,    //piece value + mobility
         0.125,  //space bonus
         0.4     //king safety
     };
-    private static final double LIFETIME = 150, DROPOFF = 8, THRESHOLD = 30; private static int TIMEOUT = 180; //branching
+    private static final double LIFETIME = 300, DROPOFF = 11, THRESHOLD = 30; private static int TIMEOUT = 180; //branching
 
     //variables
     private Board game;
@@ -42,7 +42,7 @@ public class aiThread extends Thread {
         ChessAI.scores[arrPos] = branch(1, game);
         ChessAI.threadDead[arrPos] = true;
         if(ChessAI.debug)
-            System.out.println("Thread " + arrPos + " ended @ depth " + depth + " with score " + score);
+            System.out.println("Thread " + arrPos + " ended @ depth " + depth + " with score " + ChessAI.scores[arrPos]);
     }
     
     //evaluate position, return score
@@ -202,7 +202,7 @@ public class aiThread extends Thread {
                         case 'N': bonus = Math.pow((double)legalMoves / 6.4 - 0.55, 3) + 1; break;
                         case 'B': bonus = Math.pow((double)legalMoves / 11.3 - 0.58, 3) + 1; break;
                         case 'R': bonus = Math.pow((double)legalMoves / 12.6 - 0.6, 3) + 1; break;
-                        case 'Q': bonus = Math.pow((double)legalMoves / 22.3 - 0.56, 3) + 1; break;
+                        case 'Q': bonus = Math.pow((double)legalMoves / 32.3 - 0.36, 3) + 1; break;
                         case 'K': bonus = Math.pow((double)legalMoves / 8.2 - 0.4, 3) + 1; break;
                         default: bonus = 0; break;
                     }
@@ -380,9 +380,9 @@ public class aiThread extends Thread {
 
         java.util.function.BooleanSupplier branchability = () -> {
             if(evaluate(game) - score > -1.0)
-                return Math.abs(evaluate(game) - score) * (LIFETIME / ((double) branches - 0.9) - DROPOFF) * (game.turnCount % 2 == 1 ? 1 : -1) > THRESHOLD;
+                return Math.abs(evaluate(game) - score) * (LIFETIME / ((double) branches - 0.9) - (LIFETIME / (DROPOFF - 0.9))) * (game.turnCount % 2 == 1 ? 1 : -1) > THRESHOLD;
             else
-                return (evaluate(game) - score) * (LIFETIME / ((double) branches - 0.9) - DROPOFF) * (game.turnCount % 2 == 1 ? 1 : -1) > THRESHOLD;
+                return (evaluate(game) - score) * (LIFETIME / ((double) branches - 0.9) - (LIFETIME / (DROPOFF - 0.9))) * (game.turnCount % 2 == 1 ? 1 : -1) > THRESHOLD;
         };
 
         //find all legal moves
