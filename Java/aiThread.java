@@ -10,10 +10,11 @@ public class aiThread extends Thread {
     //heuristic constants
     private static final double[] SCOREWEIGHT = { //evaluate
         1.0,    //piece value + mobility
-        0.125,  //space bonus
-        0.4     //king safety
+        0.1,    //space bonus
+        0.3     //king safety
     };
-    private static final double LIFETIME = 300, DROPOFF = 11, THRESHOLD = 30; private static int TIMEOUT = 180; //branching
+    private static final double LIFETIME = 100, DROPOFF = 20, THRESHOLD = 30; //branching
+    private static int TIMEOUT = 180; 
 
     //variables
     private Board game;
@@ -201,7 +202,7 @@ public class aiThread extends Thread {
                         case 'P': bonus = Math.pow((double)legalMoves / 4.6 - 0.6, 3) + 1; break;
                         case 'N': bonus = Math.pow((double)legalMoves / 6.4 - 0.55, 3) + 1; break;
                         case 'B': bonus = Math.pow((double)legalMoves / 11.3 - 0.58, 3) + 1; break;
-                        case 'R': bonus = Math.pow((double)legalMoves / 12.6 - 0.6, 3) + 1; break;
+                        case 'R': bonus = Math.pow((double)legalMoves / 15.6 - 0.5, 3) + 1; break;
                         case 'Q': bonus = Math.pow((double)legalMoves / 32.3 - 0.36, 3) + 1; break;
                         case 'K': bonus = Math.pow((double)legalMoves / 8.2 - 0.4, 3) + 1; break;
                         default: bonus = 0; break;
@@ -330,22 +331,16 @@ public class aiThread extends Thread {
         
         return score;
     }
-
-    private int getMax(int maxNum, int currNum){
-        if(currNum > maxNum)
-            return currNum;
-        else
-            return maxNum;
-    }
     
-    //branching game tree, currently static: pass number of branches
+    //branching game tree
     double branch(int branches, Board game) {
         //vars
         score = evaluate(game);
         int color = game.turnCount % 2 == 0 ? 1 : -1;
 
-        depth = getMax(depth, branches);
+        depth = Math.max(depth, branches);
 
+        //timeout if running for too long
         if((System.currentTimeMillis() / 1000) - startTime > TIMEOUT){
             if(ChessAI.debug)
                 System.out.println("Timeout"); // if timeout will return non ideal moves
@@ -355,13 +350,11 @@ public class aiThread extends Thread {
         //when user is able to input depth, will use number so that it always works without having to change the code
         this.setPriority((branches < 15 ? (int)((MIN_PRIORITY + branches) / 1.5) : 10)); // setting thread priority relative to depth
 
-        if(possibleMoves < 5)
-            System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaa");
-
+        //no possible moves means either checkmate or stalemate
         if(possibleMoves == 0){
             if(game.isInCheck(game.turnCount % 2 == 0 ? Color.BLACK : Color.WHITE)){
                 System.out.println("Checkmate @ depth " + branches);
-                return (game.turnCount % 2 == 0 ? -50 : 50); // needs reviewing
+                return (game.turnCount % 2 == 0 ? 50 : -50);
             }
             else{
                 System.out.println("Stalemate @ depth " + branches);
@@ -369,7 +362,7 @@ public class aiThread extends Thread {
             }
         }
 
-        //lambda for next block
+        //lambda to make a move if legal, otherwise return false
         java.util.function.Function<Move, Boolean> operateMove = (m) -> {
             if(game.isLegal(m, true)) {
                 game.makeMove(m);
@@ -378,11 +371,9 @@ public class aiThread extends Thread {
             else return false;
         };
 
+        //return if a branch will continue based on heuristics
         java.util.function.BooleanSupplier branchability = () -> {
-            if(evaluate(game) - score > -1.0)
-                return Math.abs(evaluate(game) - score) * (LIFETIME / ((double) branches - 0.9) - (LIFETIME / (DROPOFF - 0.9))) * (game.turnCount % 2 == 1 ? 1 : -1) > THRESHOLD;
-            else
-                return (evaluate(game) - score) * (LIFETIME / ((double) branches - 0.9) - (LIFETIME / (DROPOFF - 0.9))) * (game.turnCount % 2 == 1 ? 1 : -1) > THRESHOLD;
+            return (evaluate(game) - score) * ((LIFETIME / ((double) branches - 0.9)) - (LIFETIME / (DROPOFF - 0.9))) > THRESHOLD;
         };
 
         //find all legal moves
