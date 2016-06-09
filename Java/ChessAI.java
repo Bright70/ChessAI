@@ -1,13 +1,6 @@
 /*
     Actual AI for ChessAI.
-    Chess is a zero-sum game, so only one evaluation is required.
-    Factors to consider:
-        Piece values
-        Piece mobility
-        Space advantage
-        King safety
-        Whose turn it is
-        Pawn structure
+    Creates threads to evaluate positions.
 */
 
 package chessai;
@@ -180,7 +173,7 @@ public class ChessAI {
         }
 
         if(possibleMoves == 0){ // checkmate or stalemate
-            if(game.isInCheck(game.turnCount % 2 == 0 ? Color.BLACK : Color.WHITE))
+            if(game.isInCheck(game.turnCount % 2 == 0 ? Color.WHITE : Color.BLACK))
                 System.out.println((game.turnCount % 2 == 0 ? "Black" : "White") + " Checkmate");
             else
                 System.out.println((game.turnCount % 2 == 0 ? "Black" : "White") + " Stalemate");
@@ -198,7 +191,6 @@ public class ChessAI {
             threadPool.execute(new aiThread(i, game, nMoves[i]));
 
         //wait until threads are done
-
         while(true) {
             sleep(1000);
             int dead = 0;
@@ -238,6 +230,7 @@ public class ChessAI {
         // choose a random one
         topMoves = topMoves > 0 ? rand.nextInt(topMoves): 0;
         */
+        
         if(debug) {
             System.out.println("Computer evaluation: " + scores[(game.turnCount % 2 == 0 ? possibleMoves - (topMoves + 1) : topMoves)]);
             System.out.println("Computation took " + (float) (System.currentTimeMillis() - startTime) / 1000.0 + "s");
