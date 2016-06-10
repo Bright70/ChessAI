@@ -21,4 +21,11 @@ public class Bishop extends Piece
         name = 'B';
         this.color = color;
     }
+
+    Bishop(Color color, double value)
+    {
+        this.value = value;
+        name = 'B';
+        this.color = color;
+    }
 }

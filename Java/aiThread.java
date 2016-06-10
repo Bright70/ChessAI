@@ -8,21 +8,33 @@ package chessai;
 //threading
 public class aiThread extends Thread {
     //heuristic constants
-    private static final double[] SCOREWEIGHT = { //evaluate
+    private static double[] SCOREWEIGHT = { //evaluate
         1.0,    //piece value + mobility
         0.1,    //space bonus
         0.3     //king safety
     };
-    private static final double LIFETIME = 100, DROPOFF = 20, THRESHOLD = 30; //branching
-    private static int TIMEOUT = 180; 
+    private static double LIFETIME = 300, DROPOFF = 30, THRESHOLD = 30; //branching
+    private static int TIMEOUT = 120; // time limit for thread runtime in seconds
 
     //variables
     private Board game;
     private int depth, startTime, possibleMoves,  arrPos;
     private double score, temp, eval = 1.675e-27;
     
-    //initializer given move index and board
+    //initializer given move index and board, copies data passed from ChessAI class to local vars
     aiThread(int arrPos, Board game, Move move) {
+        initThread(arrPos, game, move);
+    }
+
+    aiThread(int arrPos, Board game, Move move, double[][] miscValues) {
+        LIFETIME = miscValues[0][0];
+        DROPOFF = miscValues[0][1];
+        SCOREWEIGHT = miscValues[1];
+        initThread(arrPos, game, move);
+    }
+
+
+    private void initThread(int arrPos, Board game, Move move){
         this.arrPos = arrPos;
         this.game = new Board();
         for(int x = 0; x < 8; x++){
@@ -39,9 +51,9 @@ public class aiThread extends Thread {
     
     //threading
     @Override
-    public void run() {
+    public void run() { // init thread
         ChessAI.scores[arrPos] = branch(1, game);
-        ChessAI.threadDead[arrPos] = true;
+        ChessAI.threadDead[arrPos] = true; // once thread is done, notify that it's terminated
         if(ChessAI.debug)
             System.out.println("Thread " + arrPos + " ended @ depth " + depth + " with score " + ChessAI.scores[arrPos]);
     }
@@ -71,6 +83,7 @@ public class aiThread extends Thread {
                     
                     //find all legal moves
                     switch(p.name) {
+                        //pawn
                         case 'P': 
                             if(y < 7 && y > 1 && game.isLegal(new Move(x, x, y, y-(turnCount%2==0?1:-1), game.board[x][y], game.board[x][y-(turnCount%2==0?1:-1)]), true))
                                 legalMoves++;
@@ -81,6 +94,7 @@ public class aiThread extends Thread {
                             if(x < 7 && y < 7 && game.isLegal(new Move(x, x+1, y, y-(turnCount%2==0?1:-1), game.board[x][y], game.board[x+1][y-(turnCount%2==0?1:-1)]), true))
                                 legalMoves++;
                             break;
+                        //knight
                         case 'N':
                             if(x > 1 && y > 0 && game.isLegal(new Move(x, x-2, y, y-1, game.board[x][y], game.board[x-2][y-1]), true))
                                 legalMoves++;
@@ -99,6 +113,7 @@ public class aiThread extends Thread {
                             if(x < 7 && y < 6 && game.isLegal(new Move(x, x+1, y, y+2, game.board[x][y], game.board[x+1][y+2]), true))
                                 legalMoves++;
                             break;
+                        //bishop
                         case 'B':
                             for(int ex = x-1, ey = y-1; ex >= 0 && ey >= 0; ex--, ey--)
                                 if(game.isLegal(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]), true))
@@ -117,6 +132,7 @@ public class aiThread extends Thread {
                                     legalMoves++;
                                 else break;
                             break;
+                        //rook
                         case 'R':
                             for(int ex = x-1; ex >= 0; ex--)
                                 if(game.isLegal(new Move(x, ex, y, y, game.board[x][y], game.board[ex][y]), true))
@@ -136,6 +152,7 @@ public class aiThread extends Thread {
                                 else break;
                             break;
                         case 'Q':
+                            //queen
                             for(int ex = x-1, ey = y-1; ex >= 0 && ey >= 0; ex--, ey--)
                                 if(game.isLegal(new Move(x, ex, y, ey, game.board[x][y], game.board[ex][ey]), true))
                                     legalMoves++;
@@ -170,6 +187,7 @@ public class aiThread extends Thread {
                                 else break;
                             break;
                         case 'K':
+                            //king
                             if(x > 0 && y > 0 && game.isLegal(new Move(x, x-1, y, y-1, game.board[x][y], game.board[x-1][y-1]), true))
                                 legalMoves++;
                             if(x > 0 && y > 0 && game.isLegal(new Move(x, x-1, y, y, game.board[x][y], game.board[x-1][y]), true))
@@ -347,8 +365,8 @@ public class aiThread extends Thread {
             return score;
         }
 
-        //when user is able to input depth, will use number so that it always works without having to change the code
-        this.setPriority((branches < 15 ? (int)((MIN_PRIORITY + branches) / 1.5) : 10)); // setting thread priority relative to depth
+        // setting thread priority relative to depth, the deeper, the higher priority it is assigned
+        this.setPriority((branches < 15 ? (int)((MIN_PRIORITY + branches) / 1.5) : 10));
 
         //no possible moves means either checkmate or stalemate
         if(possibleMoves == 0){
@@ -376,7 +394,7 @@ public class aiThread extends Thread {
             return (evaluate(game) - score) * ((LIFETIME / ((double) branches - 0.9)) - (LIFETIME / (DROPOFF - 0.9))) > THRESHOLD;
         };
 
-        //find all legal moves
+        //play all legal moves
         for(int x = 0; x < 8; x++) {
             for(int y = 0; y < 8; y++) {
                 if(game.board[x][y].name != ' ' && game.board[x][y].color ==

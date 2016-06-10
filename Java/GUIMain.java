@@ -1,6 +1,6 @@
 /*
     Graphical User Interface for game
-    TODO: FIX UNDO | DISPLAY CHECK WHEN IN CHECK
+    Also handles importing and exporting of board
 */
 
 package chessai;
@@ -27,7 +27,7 @@ class BoardUI{ // only for visual representation of Board class
 
     ImageView square, pieceView;
     Image piece; // for drag/drop
-    private int x, y;
+    private int x, y; // stores position in array
 
     BoardUI(int x, int y){
         this.x = x;
@@ -39,7 +39,8 @@ class BoardUI{ // only for visual representation of Board class
             square = new ImageView(new Image("/media/squareBlack.png"));
         }
     }
-    void updateBoard(Piece[][] board){ // calls for pieces to be set according to board in Board class
+    void updateBoard(Piece[][] board){
+        // calls for pieces to be set according to board in Board class, creates image view for the appropiate piece
         if(board[x][y].name == 'P'){
             if(board[x][y].color == Color.WHITE){
                 piece = new Image("/media/pawnWhite.png");
@@ -105,19 +106,19 @@ class BoardUI{ // only for visual representation of Board class
 
 public class GUIMain extends Application{
 
-    private Board board = new Board();
-    private ChessAI ai = new ChessAI(true);
-    private int width = 800, height = 800, offset = 75;
-    private BorderPane layout = new BorderPane();
-    private Scene scene = new Scene(layout, width, height);
-    private int sx, sy, ex, ey;
+    private Board board = new Board(); // init board
+    private ChessAI ai = new ChessAI(true); // init AI
+    private int width = 800, height = 800, offset = 75; // for graphics, layout related vars
+    private BorderPane layout = new BorderPane(); // layout to be displayed
+    private Scene scene = new Scene(layout, width, height); // scene to hold layout
+    private int sx, sy, ex, ey; // init coords and final coords for drag/drop
     public static boolean checkmate;
 
-    private BoardUI[][] boardUI = new BoardUI[8][8];
+    private BoardUI[][] boardUI = new BoardUI[8][8]; // create visual representation of board class
 
-    public static void main(String args[]){launch(args);}
+    public static void main(String args[]){launch(args);} // launch application (graphics)
 
-    private void setDragEvents(int x, int y, boolean square){
+    private void setDragEvents(int x, int y, boolean square){ // set different drag/drop events for objects
         final int X = x, Y = y;
         boardUI[x][y].square.setOnDragDropped(event -> {
             Dragboard db = event.getDragboard();
@@ -217,6 +218,7 @@ public class GUIMain extends Application{
     }
 
     private void updateBoard(){
+        // updates the board after a piece has been moved, redraws the whole board
         for(int x = 0; x < 8; x++){
             for(int y = 0; y < 8; y++){
                 if(boardUI[x][y].piece != null){
@@ -237,7 +239,7 @@ public class GUIMain extends Application{
     public void start(Stage primaryStage) throws Exception {
         primaryStage.setTitle("ChessAI");
 
-        for(int x = 0; x < 8; x++){
+        for(int x = 0; x < 8; x++){ // create the graphical elements of the board
             for(int y = 0; y < 8; y++){
                 boardUI[x][y] = new BoardUI(x, y);
                 boardUI[x][y].square.relocate(offset + x*75, offset + y*75);
@@ -247,6 +249,8 @@ public class GUIMain extends Application{
         }
 
         updateBoard();
+
+        // create menus that hold different options
 
         MenuBar menuBar = new MenuBar();
         Menu gameMenu = new Menu("_Game");
@@ -266,11 +270,11 @@ public class GUIMain extends Application{
         menuBar.getMenus().addAll(gameMenu, boardMenu);
 
         layout.setTop(menuBar);
-        primaryStage.setScene(scene);
-        primaryStage.show();
+        primaryStage.setScene(scene); // set scene to be shown on screen
+        primaryStage.show(); // show stage (open window)
     }
 
-    private void exportBoard(){
+    private void exportBoard(){ // takes current state of the board, and exports all relevant data to text file
 
         PrintWriter writer = null;
         String input = JOptionPane.showInputDialog(this, "Enter name to store board as:");
@@ -280,6 +284,7 @@ public class GUIMain extends Application{
             writer = new PrintWriter("src/exports/" + input, "UTF-8"); // add file extension?
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
             e.printStackTrace();
+            return;
         }
 
         for(int y = 0; y < 8; y++){
@@ -323,7 +328,7 @@ public class GUIMain extends Application{
         System.out.println("Board exported to file");
     }
 
-    private void importBoard(){
+    private void importBoard(){ // imports board from exported file, does not import previous moves properly
 
         String input = JOptionPane.showInputDialog(this, "Enter board to import:");
 
@@ -362,9 +367,6 @@ public class GUIMain extends Application{
                 }
             }
         }
-
-        // moves array must be imported
-        // turnCount must also be imported
 
         try {
             lines = Files.readAllLines(Paths.get("src/exports/" + input + "Moves"), StandardCharsets.UTF_8);

@@ -17,6 +17,7 @@ public class chessMain {
         Board game = new Board();
         String input;
         long start;
+        Move move;
         
         game.displayBoard(game.board);
         
@@ -28,13 +29,12 @@ public class chessMain {
 
             System.out.print("\n\n");
             
-            Move move = convertMove(input, game);
+            move = convertMove(input, game);
             
-            if(game.isLegal(move, true)) {
+            if(move != null && game.isLegal(move, true)) {
                 game.makeMove(move);
                 game.displayBoard(game.board);
 
-                //experimental AI stuff
                 System.out.print("Computer is thinking...");
                 start = System.currentTimeMillis();
                 move = ai.aiMakeMove(game);
@@ -42,14 +42,14 @@ public class chessMain {
                 game.makeMove(move);
                 game.displayBoard(game.board);
             }
-            else {
+            else if(move != null){
                 System.out.print("Illegal move.");
                 game.displayBoard(game.board);
             }
             
-        } while(true); //win condition
+        } while(move != null); //win condition
         
-//        System.out.print((game.turnCount % 2 == 0 ? "Black" : "White") + " wins!");
+        System.out.print((game.turnCount % 2 == 0 ? "Black" : "White") + " wins!");
         
     }
     

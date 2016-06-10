@@ -5,7 +5,6 @@
 
 package chessai;
 
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -15,12 +14,18 @@ public class ChessAI {
     static double[] scores;
     static boolean[] threadDead;
     static private double THRESHOLD = 0.25;
-    private Random rand = new Random();
     public static boolean debug;
+    //double[] pieceVals;
+    double[][] miscVals;
 
     //initialize vars
     public ChessAI(boolean debug) {
         ChessAI.debug = debug;
+    }
+    public ChessAI(boolean debug, double[][] miscVals) {
+        ChessAI.debug = debug;
+        //this.pieceVals = pieceVals;
+        this.miscVals = miscVals;
     }
 
     //choose a move by evaulating multiple positions with threads
@@ -177,20 +182,24 @@ public class ChessAI {
                 System.out.println((game.turnCount % 2 == 0 ? "Black" : "White") + " Checkmate");
             else
                 System.out.println((game.turnCount % 2 == 0 ? "Black" : "White") + " Stalemate");
-            return null;
+            return null; // when a null move is returned to parent, game is ended
         }
         
         Move[] nMoves = new Move[possibleMoves];
         System.arraycopy(moves, 0, nMoves, 0, possibleMoves);
         scores = new double[possibleMoves];
-        threadDead = new boolean[possibleMoves];
+        threadDead = new boolean[possibleMoves]; // set to true when a thread is done calculating
 
         //evaluate positions
-        ExecutorService threadPool = Executors.newCachedThreadPool();
-        for(int i = 0; i < possibleMoves; i++)
-            threadPool.execute(new aiThread(i, game, nMoves[i]));
+        ExecutorService threadPool = Executors.newFixedThreadPool(possibleMoves); // creates threadpool, one thread for each legal move
+        for(int i = 0; i < possibleMoves; i++) {
+            if(miscVals == null)
+                threadPool.execute(new aiThread(i, game, nMoves[i])); // create new thread to see outcome if move i in nMoves is made
+            else
+                threadPool.execute(new aiThread(i, game, nMoves[i], miscVals)); // new thread with modified values, only vor AIvsAI
+        }
 
-        //wait until threads are done
+        //wait until threads are done processing
         while(true) {
             sleep(1000);
             int dead = 0;
@@ -213,6 +222,7 @@ public class ChessAI {
 
         int topMoves = 0;
         // randomizer, will pick top 25% of moves best for the current player, and choose one randomly
+        // not implemented for reliability
         /*
 
         for(int x = 0; x < possibleMoves; x++) {
@@ -231,7 +241,7 @@ public class ChessAI {
         topMoves = topMoves > 0 ? rand.nextInt(topMoves): 0;
         */
         
-        if(debug) {
+        if(debug) { // debug code
             System.out.println("Computer evaluation: " + scores[(game.turnCount % 2 == 0 ? possibleMoves - (topMoves + 1) : topMoves)]);
             System.out.println("Computation took " + (float) (System.currentTimeMillis() - startTime) / 1000.0 + "s");
         }
@@ -239,15 +249,15 @@ public class ChessAI {
         for(int x = 0; x < possibleMoves; x++)
             System.out.println(scores[x]);
 
-        return nMoves[(game.turnCount % 2 == 0 ? possibleMoves - (topMoves + 1) : topMoves)];
+        return nMoves[(game.turnCount % 2 == 0 ? possibleMoves - (topMoves + 1) : topMoves)]; // return best color for either black or white
     }
 
-    public static void sleep(int time){
+    public static void sleep(int time){ // function that stops the program for determined period of time, used to stop program until all threads are terminated
         long startTime = System.currentTimeMillis();
         while(System.currentTimeMillis() - startTime < time);
     }
     
-    //quicksort moves for aiMakeMove. last move should be the best for white
+    //quicksort moves for aiMakeMove. last move should be the best for white, and first, best for black
     private void quickSort(double[] scores, Move[] moves, int left, int right)
     {
         double temp; Move mTemp;

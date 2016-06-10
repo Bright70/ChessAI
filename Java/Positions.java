@@ -1,4 +1,4 @@
-/*
+package chessai;/*
     Predetermined positions for Chess.
     Copy and paste into console.
 */

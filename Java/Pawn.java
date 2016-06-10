@@ -21,4 +21,11 @@ public class Pawn extends Piece
         name = 'P';
         this.color = color;
     }
+
+    Pawn(Color color, double value)
+    {
+        this.value = value;
+        name = 'P';
+        this.color = color;
+    }
 }

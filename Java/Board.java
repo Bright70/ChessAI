@@ -444,7 +444,7 @@ public final class Board {
         }
     }
     
-    public void swap(int sx, int ex, int sy, int ey){
+    public void swap(int sx, int ex, int sy, int ey){ // swaps two pe
     	Piece tmp = board[sx][sy];
     	board[sx][sy] = board[ex][ey];
     	board[ex][ey] = tmp;

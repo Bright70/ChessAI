@@ -21,4 +21,11 @@ public class King extends Piece
         name = 'K';
         this.color = color;
     }
+
+    King(Color color, double value)
+    {
+        this.value = value;
+        name = 'K';
+        this.color = color;
+    }
 }
